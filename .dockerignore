@@ -1,0 +1,34 @@
+# Directorios de build
+bin/
+obj/
+out/
+
+# Archivos de Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Base de datos local
+*.db
+*.sqlite
+
+# Archivos de configuración local
+appsettings.Development.json
+appsettings.Local.json
+
+node_modules/
+
+# Git
+.git/
+.gitignore
+README.md

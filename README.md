@@ -1,10 +1,10 @@
 Backend API - Hardware Ecommerce 🖥️ 
 
-Backend API de ecommerce especializado en componentes de PC. 
+API REST para tienda de hardware
 
 Stack técnologico: 
 
-ASP.NET Core web API | .NET 9
+- ASP.NET Core web API | .NET 9
 - Entity Framework Core 
 - PostgreSQL 
 - JWT 

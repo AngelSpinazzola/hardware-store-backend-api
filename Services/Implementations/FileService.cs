@@ -1,7 +1,8 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using EcommerceAPI.Services.Interfaces;
 
-namespace EcommerceAPI.Services
+namespace EcommerceAPI.Services.Implementations
 {
     public class FileService : IFileService
     {

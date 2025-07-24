@@ -1,7 +1,9 @@
 using EcommerceAPI.Data;
 using EcommerceAPI.Helpers;
-using EcommerceAPI.Repositories;
-using EcommerceAPI.Services;
+using EcommerceAPI.Repositories.Implementations;
+using EcommerceAPI.Repositories.Interfaces;
+using EcommerceAPI.Services.Implementations;
+using EcommerceAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -145,6 +147,8 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductImageService, ProductImageService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IShippingAddressRepository, ShippingAddressRepository>();
+builder.Services.AddScoped<IShippingAddressService, ShippingAddressService>();
 
 var app = builder.Build();
 

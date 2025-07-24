@@ -206,5 +206,33 @@ namespace EcommerceAPI.Helpers
 
             return (true, "");
         }
+
+        public static string SanitizeName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return string.Empty;
+
+            // Para nombres, permite solo letras, espacios, acentos y algunos caracteres especiales
+            var sanitized = Regex.Replace(name.Trim(), @"[^a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\s\-\.]", "");
+
+            // Remueve múltiples espacios
+            sanitized = Regex.Replace(sanitized, @"\s+", " ");
+
+            return sanitized.Trim();
+        }
+
+        public static string SanitizePhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return string.Empty;
+
+            // Para teléfonos, permite solo números, espacios, guiones, paréntesis y el signo +
+            var sanitized = Regex.Replace(phone.Trim(), @"[^\d\s\-\(\)\+]", "");
+
+            // Remueve múltiples espacios
+            sanitized = Regex.Replace(sanitized, @"\s+", " ");
+
+            return sanitized.Trim();
+        }
     }
 }

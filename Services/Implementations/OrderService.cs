@@ -2,25 +2,30 @@
 using EcommerceAPI.DTOs.Orders;
 using EcommerceAPI.Helpers;
 using EcommerceAPI.Models;
-using EcommerceAPI.Repositories;
+using EcommerceAPI.Repositories.Implementations;
+using EcommerceAPI.Repositories.Interfaces;
+using EcommerceAPI.Services.Interfaces;
 using Serilog;
 
-namespace EcommerceAPI.Services
+namespace EcommerceAPI.Services.Implementations
 {
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IProductRepository _productRepository;
         private readonly IFileService _fileService;
+        private readonly IShippingAddressRepository _shippingAddressRepository;
 
         public OrderService(
             IOrderRepository orderRepository,
             IProductRepository productRepository,
-            IFileService fileService)
+            IFileService fileService,
+            IShippingAddressRepository shippingAddressRepository)
         {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
             _fileService = fileService;
+            _shippingAddressRepository = shippingAddressRepository;
         }
 
         public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createOrderDto, int? userId = null)
@@ -97,13 +102,37 @@ namespace EcommerceAPI.Services
                 });
             }
 
+            var shippingAddress = await _shippingAddressRepository.GetByIdAsync(createOrderDto.ShippingAddressId);
+            if (shippingAddress == null)
+            {
+                throw new ArgumentException("Dirección de envío no encontrada");
+            }
+
             // Crea la orden
             var order = new Order
             {
                 CustomerName = sanitizedCustomerName,
                 CustomerEmail = emailValidation.SanitizedEmail,
                 CustomerPhone = SecurityHelper.SanitizeInput(createOrderDto.CustomerPhone),
+
                 ShippingAddressId = createOrderDto.ShippingAddressId,
+                ShippingAddressType = shippingAddress.AddressType,
+                ShippingStreet = shippingAddress.Street,
+                ShippingNumber = shippingAddress.Number,
+                ShippingFloor = shippingAddress.Floor,
+                ShippingApartment = shippingAddress.Apartment,
+                ShippingTower = shippingAddress.Tower,
+                ShippingBetweenStreets = shippingAddress.BetweenStreets,
+                ShippingPostalCode = shippingAddress.PostalCode,
+                ShippingProvince = shippingAddress.Province,
+                ShippingCity = shippingAddress.City,
+                ShippingObservations = shippingAddress.Observations,
+
+                AuthorizedPersonFirstName = shippingAddress.AuthorizedPersonFirstName,
+                AuthorizedPersonLastName = shippingAddress.AuthorizedPersonLastName,
+                AuthorizedPersonPhone = shippingAddress.AuthorizedPersonPhone,
+                AuthorizedPersonDni = shippingAddress.AuthorizedPersonDni,
+
                 Total = total,
                 Status = OrderStatus.PendingPayment,
                 PaymentMethod = "bank_transfer",
@@ -252,7 +281,7 @@ namespace EcommerceAPI.Services
 
             var order = await _orderRepository.GetByIdAsync(orderId);
 
-            if (order == null || (order.Status != OrderStatus.PendingPayment && order.Status != OrderStatus.PaymentRejected))
+            if (order == null || order.Status != OrderStatus.PendingPayment && order.Status != OrderStatus.PaymentRejected)
             {
                 Log.Warning("Invalid order state for receipt upload: OrderId={OrderId}, Status={Status}",
                     orderId, order?.Status ?? "null");

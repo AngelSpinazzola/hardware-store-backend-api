@@ -1,6 +1,6 @@
 ﻿using EcommerceAPI.DTOs.Products;
 using EcommerceAPI.Helpers;
-using EcommerceAPI.Services;
+using EcommerceAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;

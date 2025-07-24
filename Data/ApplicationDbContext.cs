@@ -94,7 +94,6 @@ namespace EcommerceAPI.Data
                 // Configuración
                 entity.Property(e => e.IsDefault).HasDefaultValue(false);
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
-                entity.Property(e => e.Alias).HasMaxLength(100);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
                 entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
 

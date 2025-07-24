@@ -267,25 +267,9 @@ namespace EcommerceAPI.Controllers
                 }
 
                 // Valida datos básicos
-                if (!string.IsNullOrEmpty(updateUserDto.FirstName))
-                {
-                    var trimmedFirstName = updateUserDto.FirstName.Trim();
-                    if (trimmedFirstName.Length < 2 || trimmedFirstName.Length > 50)
-                    {
-                        return BadRequest(new { message = "El nombre debe tener entre 2 y 50 caracteres" });
-                    }
-                    user.FirstName = trimmedFirstName;
-                }
+                user.FirstName = SecurityHelper.SanitizeName(updateUserDto.FirstName);
+                user.LastName = SecurityHelper.SanitizeName(updateUserDto.LastName);
 
-                if (!string.IsNullOrEmpty(updateUserDto.LastName))
-                {
-                    var trimmedLastName = updateUserDto.LastName.Trim();
-                    if (trimmedLastName.Length < 2 || trimmedLastName.Length > 50)
-                    {
-                        return BadRequest(new { message = "El apellido debe tener entre 2 y 50 caracteres" });
-                    }
-                    user.LastName = trimmedLastName;
-                }
 
                 await _context.SaveChangesAsync();
 

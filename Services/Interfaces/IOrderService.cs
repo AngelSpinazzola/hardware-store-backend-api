@@ -1,7 +1,7 @@
 ﻿using EcommerceAPI.DTOs.Orders;
 using Microsoft.AspNetCore.Http;
 
-namespace EcommerceAPI.Services
+namespace EcommerceAPI.Services.Interfaces
 {
     public interface IOrderService
     {

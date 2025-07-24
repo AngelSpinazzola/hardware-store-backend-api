@@ -1,4 +1,4 @@
-﻿namespace EcommerceAPI.Services
+﻿namespace EcommerceAPI.Services.Interfaces
 {
     public interface IFileService
     {

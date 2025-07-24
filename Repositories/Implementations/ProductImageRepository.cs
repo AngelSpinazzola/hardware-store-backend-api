@@ -1,8 +1,9 @@
 ﻿using EcommerceAPI.Data;
 using EcommerceAPI.Models;
+using EcommerceAPI.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace EcommerceAPI.Repositories
+namespace EcommerceAPI.Repositories.Implementations
 {
     public class ProductImageRepository : IProductImageRepository
     {

@@ -1,6 +1,6 @@
 ﻿using EcommerceAPI.DTOs.Products;
 
-namespace EcommerceAPI.Services
+namespace EcommerceAPI.Services.Interfaces
 {
     public interface IProductImageService
     {

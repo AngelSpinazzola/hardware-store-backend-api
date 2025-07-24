@@ -31,14 +31,14 @@ namespace EcommerceAPI.Models
         public decimal Total { get; set; }
         public string Status { get; set; } = "pending_payment";
         public string PaymentMethod { get; set; } = "bank_transfer";
-        public string PaymentReceiptUrl { get; set; }
+        public string? PaymentReceiptUrl { get; set; }
         public DateTime? PaymentReceiptUploadedAt { get; set; }
         public DateTime? PaymentApprovedAt { get; set; }
         public DateTime? ShippedAt { get; set; }
         public DateTime? DeliveredAt { get; set; }
-        public string AdminNotes { get; set; }
-        public string TrackingNumber { get; set; }
-        public string ShippingProvider { get; set; }
+        public string? AdminNotes { get; set; }
+        public string? TrackingNumber { get; set; }
+        public string? ShippingProvider { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public virtual User User { get; set; }

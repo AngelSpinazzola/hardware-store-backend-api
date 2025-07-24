@@ -1,6 +1,6 @@
 ﻿using EcommerceAPI.Models;
 
-namespace EcommerceAPI.Repositories
+namespace EcommerceAPI.Repositories.Interfaces
 {
     public interface IProductImageRepository
     {

@@ -1,9 +1,10 @@
 ﻿using EcommerceAPI.Data;
 using EcommerceAPI.DTOs.Products;
 using EcommerceAPI.Models;
-using EcommerceAPI.Repositories;
+using EcommerceAPI.Repositories.Interfaces;
+using EcommerceAPI.Services.Interfaces;
 
-namespace EcommerceAPI.Services
+namespace EcommerceAPI.Services.Implementations
 {
     public class ProductImageService : IProductImageService
     {

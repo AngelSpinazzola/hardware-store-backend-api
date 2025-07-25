@@ -118,12 +118,7 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                 "http://localhost:5173",
-                "https://localhost:5173",
-                "http://localhost:3000",
-                "https://localhost:3000",
-                "http://127.0.0.1:5173",
-                "http://127.0.0.1:3000",
-                "https://ecommerce-react-tailwindcss.vercel.app"
+                "http://localhost:3000"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -151,6 +146,11 @@ builder.Services.AddScoped<IShippingAddressRepository, ShippingAddressRepository
 builder.Services.AddScoped<IShippingAddressService, ShippingAddressService>();
 
 var app = builder.Build();
+
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection(); 
+}
 
 if (app.Environment.IsDevelopment())
 {

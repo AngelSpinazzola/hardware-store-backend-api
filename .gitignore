@@ -9,6 +9,7 @@ out/
 *.suo
 *.userosscache
 *.sln.docstates
+Properties/launchSettings.json
 
 # Configuration files con datos sensibles
 appsettings.json

@@ -48,9 +48,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Ecommerce Gaming API",
+        Title = "HardStore API",
         Version = "v1",
-        Description = "API para tienda gaming"
+        Description = "API para Tienda de Hardware"
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()

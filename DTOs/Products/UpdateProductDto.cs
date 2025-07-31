@@ -10,7 +10,7 @@ namespace EcommerceAPI.DTOs.Products
         [StringLength(1000)]
         public string? Description { get; set; }
 
-        [Range(0.01, 999999.99)]
+        [Range(0.01, 20000000.00)]
         public decimal? Price { get; set; }
 
         [Range(0, int.MaxValue)]

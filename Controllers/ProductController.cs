@@ -300,7 +300,7 @@ namespace EcommerceAPI.Controllers
 
         // Busca productos por término
         [HttpGet("search")]
-        [EnableRateLimiting("auth")]
+        [EnableRateLimiting("search")]
         public async Task<IActionResult> SearchProducts([FromQuery] string term)
         {
             try

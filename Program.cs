@@ -33,7 +33,13 @@ builder.Services.AddRateLimiter(options =>
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         options.QueueLimit = 2;
     });
-
+    options.AddFixedWindowLimiter("search", options =>
+    {
+        options.PermitLimit = 50; 
+        options.Window = TimeSpan.FromMinutes(1);
+        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 15;
+    });
     options.AddFixedWindowLimiter("upload", options =>
     {
         options.PermitLimit = 10;

@@ -48,8 +48,8 @@ namespace EcommerceAPI.Repositories.Implementations
             existingProduct.Price = product.Price;
             existingProduct.Stock = product.Stock;
             existingProduct.Category = product.Category;
-            existingProduct.Brand = product.Brand;        
-            existingProduct.Model = product.Model;           
+            existingProduct.Brand = product.Brand;
+            existingProduct.Model = product.Model;
             existingProduct.MainImageUrl = product.MainImageUrl;
             existingProduct.IsActive = product.IsActive;
             existingProduct.UpdatedAt = DateTime.UtcNow;
@@ -88,16 +88,25 @@ namespace EcommerceAPI.Repositories.Implementations
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
-
         public async Task<IEnumerable<Product>> SearchAsync(string searchTerm)
         {
+            var normalizedTerm = searchTerm.ToLower().Trim();
+
             return await _context.Products
                 .Where(p => p.IsActive &&
-                           (p.Name.ToLower().Contains(searchTerm.ToLower()) ||
-                            p.Description.ToLower().Contains(searchTerm.ToLower()) ||
-                            p.Category.ToLower().Contains(searchTerm.ToLower()) ||
-                            p.Brand.ToLower().Contains(searchTerm.ToLower()) ||      
-                            p.Model.ToLower().Contains(searchTerm.ToLower())))      
+                       (
+                           // Búsqueda básica - más eficiente
+                           p.Name.ToLower().Contains(normalizedTerm) ||
+                           p.Brand.ToLower().Contains(normalizedTerm) ||
+                           p.Model.ToLower().Contains(normalizedTerm) ||
+                           p.Category.ToLower().Contains(normalizedTerm) ||
+                           (p.Description != null && p.Description.ToLower().Contains(normalizedTerm)) ||
+
+                           // Solo patrones específicos más importantes
+                           p.Name.ToLower().StartsWith(normalizedTerm + "-") ||
+                           p.Name.ToLower().Contains(" " + normalizedTerm + " ") ||
+                           p.Name.ToLower().Contains(" " + normalizedTerm + "-")
+                       ))
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }

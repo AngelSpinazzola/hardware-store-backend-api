@@ -69,3 +69,7 @@ StyleCopReport.xml
 *.pidb
 *.svclog
 *.scc
+
+# Archivos de prueba y configuración local
+*.http
+launchSettings.json

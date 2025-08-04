@@ -30,6 +30,9 @@ namespace EcommerceAPI.DTOs.Products
         [StringLength(100)]                            
         public string Model { get; set; }
 
+        [StringLength(50)]
+        public string? Platform { get; set; }
+
         public IFormFile[]? ImageFiles { get; set; }
         public string[]? ImageUrls { get; set; }
     }

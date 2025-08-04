@@ -13,6 +13,7 @@ namespace EcommerceAPI.Models
         public string Brand { get; set; }            
         public string Model { get; set; }           
         public string MainImageUrl { get; set; }
+        public string? Platform { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

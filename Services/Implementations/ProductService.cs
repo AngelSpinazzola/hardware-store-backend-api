@@ -35,6 +35,7 @@ namespace EcommerceAPI.Services.Implementations
                 Category = p.Category,
                 Brand = p.Brand,
                 Model = p.Model,
+                Platform = p.Platform,
                 MainImageUrl = p.MainImageUrl,
                 IsActive = p.IsActive
             });
@@ -58,6 +59,7 @@ namespace EcommerceAPI.Services.Implementations
                 Category = product.Category,
                 Brand = product.Brand,
                 Model = product.Model,
+                Platform = product.Platform,
                 MainImageUrl = product.MainImageUrl,
                 IsActive = product.IsActive,
                 CreatedAt = product.CreatedAt,
@@ -87,6 +89,7 @@ namespace EcommerceAPI.Services.Implementations
                 Category = createProductDto.Category.Trim(),
                 Brand = createProductDto.Brand.Trim(),
                 Model = createProductDto.Model?.Trim() ?? string.Empty,
+                Platform = createProductDto.Platform?.Trim(),
                 MainImageUrl = defaultPlaceholder,
                 IsActive = true
             };
@@ -190,6 +193,7 @@ namespace EcommerceAPI.Services.Implementations
                 Category = updateProductDto.Category?.Trim() ?? existingProduct.Category,
                 Brand = updateProductDto.Brand?.Trim() ?? existingProduct.Brand,
                 Model = updateProductDto.Model?.Trim() ?? existingProduct.Model,
+                Platform = updateProductDto.Platform?.Trim() ?? existingProduct.Platform,
                 IsActive = updateProductDto.IsActive ?? existingProduct.IsActive,
                 MainImageUrl = existingProduct.MainImageUrl,
                 CreatedAt = existingProduct.CreatedAt,

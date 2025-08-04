@@ -50,6 +50,7 @@ namespace EcommerceAPI.Repositories.Implementations
             existingProduct.Category = product.Category;
             existingProduct.Brand = product.Brand;
             existingProduct.Model = product.Model;
+            existingProduct.Platform = product.Platform;
             existingProduct.MainImageUrl = product.MainImageUrl;
             existingProduct.IsActive = product.IsActive;
             existingProduct.UpdatedAt = DateTime.UtcNow;

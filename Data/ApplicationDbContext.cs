@@ -44,7 +44,8 @@ namespace EcommerceAPI.Data
                 entity.Property(e => e.Stock).HasDefaultValue(0);
                 entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Brand).IsRequired().HasMaxLength(100); 
-                entity.Property(e => e.Model).HasMaxLength(100); 
+                entity.Property(e => e.Model).HasMaxLength(100);
+                entity.Property(e => e.Platform).HasMaxLength(50);
                 entity.Property(e => e.MainImageUrl).HasMaxLength(500);
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");

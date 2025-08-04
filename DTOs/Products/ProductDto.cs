@@ -9,7 +9,8 @@
         public int Stock { get; set; }
         public string Category { get; set; }
         public string Brand { get; set; }              
-        public string Model { get; set; }             
+        public string Model { get; set; }
+        public string? Platform { get; set; }
         public string MainImageUrl { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }

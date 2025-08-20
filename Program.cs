@@ -132,7 +132,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            policy.WithOrigins("https://ecommerce-react-tailwindcss.vercel.app")
+            policy.WithOrigins("https://novatech.vercel.app")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();

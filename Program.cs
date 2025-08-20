@@ -132,7 +132,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            policy.WithOrigins("https://novatech.vercel.app")
+            policy.WithOrigins("https://novatech-store.vercel.app")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();

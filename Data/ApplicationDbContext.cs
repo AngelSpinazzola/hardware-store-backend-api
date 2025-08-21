@@ -93,7 +93,6 @@ namespace EcommerceAPI.Data
                 entity.Property(e => e.AuthorizedPersonDni).IsRequired().HasMaxLength(20);
 
                 // Configuración
-                entity.Property(e => e.IsDefault).HasDefaultValue(false);
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
                 entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
@@ -105,7 +104,7 @@ namespace EcommerceAPI.Data
                       .OnDelete(DeleteBehavior.Cascade);
 
                 // Índice para optimizar consultas
-                entity.HasIndex(e => new { e.UserId, e.IsDefault });
+                entity.HasIndex(e => e.UserId);
             });
 
             // CONFIGURACIÓN DE ORDER

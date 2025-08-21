@@ -21,8 +21,7 @@ namespace EcommerceAPI.Repositories.Implementations
             {
                 return await _context.ShippingAddresses
                     .Where(sa => sa.UserId == userId && sa.IsActive)
-                    .OrderByDescending(sa => sa.IsDefault)
-                    .ThenByDescending(sa => sa.CreatedAt)
+                    .OrderByDescending(sa => sa.CreatedAt)
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -42,20 +41,6 @@ namespace EcommerceAPI.Repositories.Implementations
             catch (Exception ex)
             {
                 Log.Error(ex, "Error retrieving address: {AddressId}", id);
-                return null;
-            }
-        }
-
-        public async Task<ShippingAddress?> GetDefaultAddressAsync(int userId)
-        {
-            try
-            {
-                return await _context.ShippingAddresses
-                    .FirstOrDefaultAsync(sa => sa.UserId == userId && sa.IsDefault && sa.IsActive);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error retrieving default address for user: {UserId}", userId);
                 return null;
             }
         }
@@ -106,7 +91,6 @@ namespace EcommerceAPI.Repositories.Implementations
                 existingAddress.AuthorizedPersonLastName = address.AuthorizedPersonLastName;
                 existingAddress.AuthorizedPersonPhone = address.AuthorizedPersonPhone;
                 existingAddress.AuthorizedPersonDni = address.AuthorizedPersonDni;
-                existingAddress.IsDefault = address.IsDefault;
                 existingAddress.IsActive = address.IsActive;
                 existingAddress.UpdatedAt = address.UpdatedAt;
 

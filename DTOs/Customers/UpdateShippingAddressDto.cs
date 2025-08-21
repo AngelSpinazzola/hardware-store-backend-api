@@ -71,7 +71,5 @@ namespace EcommerceAPI.DTOs.Customers
         [StringLength(500, ErrorMessage = "Las observaciones no pueden exceder 500 caracteres")]
         [RegularExpression(@"^[a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\w\s\-\.\,\(\)\:]{0,500}$", ErrorMessage = "Las observaciones contienen caracteres inválidos")]
         public string? Observations { get; set; }
-
-        public bool IsDefault { get; set; } = false;
     }
 }

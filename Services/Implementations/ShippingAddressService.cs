@@ -72,10 +72,6 @@ namespace EcommerceAPI.Services.Implementations
                 throw new ArgumentException("Formato de DNI inválido");
             }
 
-            // Si es la primera dirección del usuario, se conviene en predeterminada
-            var existingAddresses = await _shippingAddressRepository.GetByUserIdAsync(userId);
-            bool isFirstAddress = !existingAddresses.Any();
-
             var address = new ShippingAddress
             {
                 UserId = userId,
@@ -94,17 +90,10 @@ namespace EcommerceAPI.Services.Implementations
                 AuthorizedPersonLastName = sanitizedAddress.AuthorizedPersonLastName,
                 AuthorizedPersonPhone = sanitizedAddress.AuthorizedPersonPhone,
                 AuthorizedPersonDni = sanitizedAddress.AuthorizedPersonDni,
-                IsDefault = isFirstAddress || sanitizedAddress.IsDefault,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
-
-            // Si se marca como predeterminada, desmarca las demás
-            if (address.IsDefault)
-            {
-                await UnsetOtherDefaultAddressesAsync(userId);
-            }
 
             var createdAddress = await _shippingAddressRepository.CreateAsync(address);
 
@@ -163,23 +152,6 @@ namespace EcommerceAPI.Services.Implementations
             address.AuthorizedPersonDni = sanitizedAddress.AuthorizedPersonDni;
             address.UpdatedAt = DateTime.UtcNow;
 
-            // Si se marca como predeterminada, desmarca las demás
-            if (sanitizedAddress.IsDefault && !address.IsDefault)
-            {
-                await UnsetOtherDefaultAddressesAsync(userId);
-                address.IsDefault = true;
-            }
-            else if (!sanitizedAddress.IsDefault && address.IsDefault)
-            {
-                // No permite desmarcar la única dirección predeterminada
-                var defaultAddresses = await _shippingAddressRepository.GetDefaultAddressAsync(userId);
-                if (defaultAddresses != null && defaultAddresses.Id == addressId)
-                {
-                    throw new ArgumentException("Debe tener al menos una dirección predeterminada");
-                }
-                address.IsDefault = false;
-            }
-
             var result = await _shippingAddressRepository.UpdateAsync(addressId, address) != null;
 
             if (result)
@@ -205,19 +177,6 @@ namespace EcommerceAPI.Services.Implementations
                 return false;
             }
 
-            // Si es la dirección predeterminada, establece otra como predeterminada
-            if (address.IsDefault)
-            {
-                var userAddresses = await _shippingAddressRepository.GetByUserIdAsync(userId); 
-                var otherAddress = userAddresses.FirstOrDefault(a => a.Id != addressId && a.IsActive);
-                if (otherAddress != null)
-                {
-                    otherAddress.IsDefault = true;
-                    otherAddress.UpdatedAt = DateTime.UtcNow;
-                    await _shippingAddressRepository.UpdateAsync(otherAddress.Id, otherAddress);
-                }
-            }
-
             // Soft delete
             address.IsActive = false;
             address.UpdatedAt = DateTime.UtcNow;
@@ -230,66 +189,6 @@ namespace EcommerceAPI.Services.Implementations
             }
 
             return result;
-        }
-
-        public async Task<bool> SetDefaultAddressAsync(int addressId, int userId)
-        {
-            if (!SecurityHelper.AreValidIds(addressId, userId))
-            {
-                Log.Warning("Invalid IDs for setting default address: AddressId={AddressId}, UserId={UserId}", addressId, userId);
-                return false;
-            }
-
-            var address = await _shippingAddressRepository.GetByIdAsync(addressId);
-
-            if (address == null || address.UserId != userId || !address.IsActive)
-            {
-                Log.Warning("Address not found or unauthorized for setting default: AddressId={AddressId}, UserId={UserId}", addressId, userId);
-                return false;
-            }
-
-            if (address.IsDefault)
-            {
-                return true; // Ya es predeterminada
-            }
-
-            // Desmarca todas las demás direcciones como predeterminadas
-            await UnsetOtherDefaultAddressesAsync(userId);
-
-            // Marca esta dirección como predeterminada
-            address.IsDefault = true;
-            address.UpdatedAt = DateTime.UtcNow;
-
-            var result = await _shippingAddressRepository.UpdateAsync(addressId, address) != null;
-
-            if (result)
-            {
-                Log.Information("Default address set: AddressId={AddressId}, UserId={UserId}", addressId, userId);
-            }
-
-            return result;
-        }
-
-        public async Task<ShippingAddressDto?> GetDefaultAddressAsync(int userId)
-        {
-            if (!SecurityHelper.IsValidId(userId))
-            {
-                return null;
-            }
-
-            var address = await _shippingAddressRepository.GetDefaultAddressAsync(userId);
-            return address == null ? null : MapToShippingAddressDto(address);
-        }
-
-        private async Task UnsetOtherDefaultAddressesAsync(int userId)
-        {
-            var addresses = await _shippingAddressRepository.GetByUserIdAsync(userId);
-            foreach (var addr in addresses.Where(a => a.IsDefault))
-            {
-                addr.IsDefault = false;
-                addr.UpdatedAt = DateTime.UtcNow;
-                await _shippingAddressRepository.UpdateAsync(addr.Id, addr);
-            }
         }
 
         private CreateShippingAddressDto SanitizeCreateAddressDto(CreateShippingAddressDto dto)
@@ -310,8 +209,7 @@ namespace EcommerceAPI.Services.Implementations
                 AuthorizedPersonFirstName = SecurityHelper.SanitizeName(dto.AuthorizedPersonFirstName),
                 AuthorizedPersonLastName = SecurityHelper.SanitizeName(dto.AuthorizedPersonLastName),
                 AuthorizedPersonPhone = SecurityHelper.SanitizePhone(dto.AuthorizedPersonPhone),
-                AuthorizedPersonDni = SecurityHelper.SanitizeInput(dto.AuthorizedPersonDni),
-                IsDefault = dto.IsDefault
+                AuthorizedPersonDni = SecurityHelper.SanitizeInput(dto.AuthorizedPersonDni)
             };
         }
 
@@ -333,8 +231,7 @@ namespace EcommerceAPI.Services.Implementations
                 AuthorizedPersonFirstName = SecurityHelper.SanitizeName(dto.AuthorizedPersonFirstName),
                 AuthorizedPersonLastName = SecurityHelper.SanitizeName(dto.AuthorizedPersonLastName),
                 AuthorizedPersonPhone = SecurityHelper.SanitizePhone(dto.AuthorizedPersonPhone),
-                AuthorizedPersonDni = SecurityHelper.SanitizeInput(dto.AuthorizedPersonDni),
-                IsDefault = dto.IsDefault
+                AuthorizedPersonDni = SecurityHelper.SanitizeInput(dto.AuthorizedPersonDni)
             };
         }
 
@@ -359,7 +256,6 @@ namespace EcommerceAPI.Services.Implementations
                 AuthorizedPersonLastName = address.AuthorizedPersonLastName,
                 AuthorizedPersonPhone = address.AuthorizedPersonPhone,
                 AuthorizedPersonDni = address.AuthorizedPersonDni,
-                IsDefault = address.IsDefault,
                 IsActive = address.IsActive,
                 CreatedAt = address.CreatedAt,
                 UpdatedAt = address.UpdatedAt

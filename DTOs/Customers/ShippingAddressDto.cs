@@ -21,8 +21,6 @@
         public string AuthorizedPersonLastName { get; set; }
         public string AuthorizedPersonPhone { get; set; }
         public string AuthorizedPersonDni { get; set; }
-
-        public bool IsDefault { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

@@ -658,5 +658,50 @@ namespace EcommerceAPI.Controllers
                 return StatusCode(500, new { message = "Error viewing file" });
             }
         }
+
+        // Cancela orden (Usuario autenticado)
+        [HttpDelete("{id}/cancel")]
+        [Authorize]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            try
+            {
+                if (!SecurityHelper.IsValidId(id))
+                {
+                    Log.Warning("Invalid order ID for cancellation: {OrderId}", id);
+                    return BadRequest(new { message = "ID de orden inválido" });
+                }
+
+                var userInfo = OrderAuthorizationHelper.GetUserIdFromClaims(User);
+                if (!userInfo.IsValid)
+                {
+                    return BadRequest(new { message = "Usuario no válido" });
+                }
+
+                // Verifica que el usuario pueda cancelar la orden
+                if (!await _orderService.CanUserCancelOrderAsync(id, userInfo.UserId))
+                {
+                    var authContext = OrderAuthorizationHelper.GetAuthorizationContext(User, "CancelOrder", id);
+                    Log.Warning("Unauthorized order cancellation: {Context}", authContext);
+                    return Forbid("No tienes permisos para cancelar esta orden");
+                }
+
+                var result = await _orderService.CancelOrderAsync(id);
+                if (!result)
+                {
+                    Log.Warning("Order cancellation failed: OrderId={OrderId}", id);
+                    return BadRequest(new { message = "No se pudo cancelar la orden" });
+                }
+
+                Log.Information("Order cancelled: OrderId={OrderId}, UserId={UserId}", id, userInfo.UserId);
+                return Ok(new { message = "Orden cancelada correctamente" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Order cancellation failed: OrderId={OrderId}", id);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
     }
 }

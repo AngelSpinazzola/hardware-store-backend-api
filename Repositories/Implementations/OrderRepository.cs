@@ -117,5 +117,41 @@ namespace EcommerceAPI.Repositories.Implementations
                 .Take(count)
                 .ToListAsync();
         }
+
+        public async Task<Order?> GetOrderWithItemsAsync(int id)
+        {
+            return await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == id);
+        }
+
+        public async Task<bool> CancelOrderWithStockRestoreAsync(int orderId, Func<int, int, Task> restoreStockCallback)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var order = await GetOrderWithItemsAsync(orderId);
+                if (order == null || (order.Status != "pending_payment" && order.Status != "payment_rejected"))
+                    return false;
+
+                // Restaura stock usando callback
+                foreach (var item in order.OrderItems)
+                {
+                    await restoreStockCallback(item.ProductId, item.Quantity);
+                }
+
+                // Elimina orden
+                _context.Orders.Remove(order);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 }

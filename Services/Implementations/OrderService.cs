@@ -569,5 +569,60 @@ namespace EcommerceAPI.Services.Implementations
                 ShippingProvince = order.ShippingProvince
             };
         }
+
+        public async Task<bool> CanUserCancelOrderAsync(int orderId, int userId)
+        {
+            if (!SecurityHelper.AreValidIds(orderId, userId))
+            {
+                Log.Warning("Invalid IDs for cancel order check: OrderId={OrderId}, UserId={UserId}", orderId, userId);
+                return false;
+            }
+
+            var order = await _orderRepository.GetByIdAsync(orderId);
+            return order != null &&
+                   order.UserId == userId &&
+                   (order.Status == OrderStatus.PendingPayment || order.Status == OrderStatus.PaymentRejected);
+        }
+
+        public async Task<bool> CancelOrderAsync(int orderId)
+        {
+            if (!SecurityHelper.IsValidId(orderId))
+            {
+                Log.Warning("Invalid order ID for cancellation: {OrderId}", orderId);
+                return false;
+            }
+
+            try
+            {
+                // Función callback para restaurar stock
+                async Task RestoreStock(int productId, int quantity)
+                {
+                    var product = await _productRepository.GetByIdAsync(productId);
+                    if (product != null)
+                    {
+                        product.Stock += quantity;
+                        product.UpdatedAt = DateTime.UtcNow;
+                        await _productRepository.UpdateAsync(product.Id, product);
+
+                        Log.Information("Stock restored: ProductId={ProductId}, Quantity={Quantity}, NewStock={NewStock}",
+                            productId, quantity, product.Stock);
+                    }
+                }
+
+                var result = await _orderRepository.CancelOrderWithStockRestoreAsync(orderId, RestoreStock);
+
+                if (result)
+                {
+                    Log.Information("Order cancelled successfully: OrderId={OrderId}", orderId);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error cancelling order: OrderId={OrderId}", orderId);
+                return false;
+            }
+        }
     }
 }

@@ -12,5 +12,7 @@ namespace EcommerceAPI.Repositories.Interfaces
         Task<bool> UpdateStatusAsync(int id, string status);
         Task<IEnumerable<Order>> GetByStatusAsync(string status);
         Task<IEnumerable<Order>> GetRecentOrdersAsync(int count = 10);
+        Task<Order?> GetOrderWithItemsAsync(int id);
+        Task<bool> CancelOrderWithStockRestoreAsync(int orderId, Func<int, int, Task> restoreStockCallback);
     }
 }

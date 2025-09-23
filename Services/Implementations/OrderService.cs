@@ -128,10 +128,11 @@ namespace EcommerceAPI.Services.Implementations
                 ShippingCity = shippingAddress.City,
                 ShippingObservations = shippingAddress.Observations,
 
-                AuthorizedPersonFirstName = shippingAddress.AuthorizedPersonFirstName,
-                AuthorizedPersonLastName = shippingAddress.AuthorizedPersonLastName,
-                AuthorizedPersonPhone = shippingAddress.AuthorizedPersonPhone,
-                AuthorizedPersonDni = shippingAddress.AuthorizedPersonDni,
+                // Datos del receptor
+                AuthorizedPersonFirstName = SecurityHelper.SanitizeInput(createOrderDto.ReceiverFirstName),
+                AuthorizedPersonLastName = SecurityHelper.SanitizeInput(createOrderDto.ReceiverLastName),
+                AuthorizedPersonPhone = SecurityHelper.SanitizeInput(createOrderDto.ReceiverPhone),
+                AuthorizedPersonDni = SecurityHelper.SanitizeInput(createOrderDto.ReceiverDni),
 
                 Total = total,
                 Status = OrderStatus.PendingPayment,

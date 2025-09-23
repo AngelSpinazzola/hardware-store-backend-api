@@ -20,6 +20,22 @@ namespace EcommerceAPI.DTOs.Orders
         public int ShippingAddressId { get; set; }
 
         [Required]
+        [StringLength(50)]
+        public string ReceiverFirstName { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string ReceiverLastName { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string ReceiverPhone { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string ReceiverDni { get; set; }
+
+        [Required]
         public List<CreateOrderItemDto> Items { get; set; } = new();
     }
 }

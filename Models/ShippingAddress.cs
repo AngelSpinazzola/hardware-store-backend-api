@@ -18,13 +18,6 @@ namespace EcommerceAPI.Models
         public string Province { get; set; }
         public string City { get; set; }
         public string Observations { get; set; }
-
-        // Persona autorizada
-        public string AuthorizedPersonFirstName { get; set; }
-        public string AuthorizedPersonLastName { get; set; }
-        public string AuthorizedPersonPhone { get; set; }
-        public string AuthorizedPersonDni { get; set; }
-
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

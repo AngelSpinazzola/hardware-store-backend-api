@@ -86,12 +86,6 @@ namespace EcommerceAPI.Data
                 entity.Property(e => e.City).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Observations).HasMaxLength(500);
 
-                // Persona autorizada
-                entity.Property(e => e.AuthorizedPersonFirstName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.AuthorizedPersonLastName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.AuthorizedPersonPhone).IsRequired().HasMaxLength(20);
-                entity.Property(e => e.AuthorizedPersonDni).IsRequired().HasMaxLength(20);
-
                 // Configuración
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");

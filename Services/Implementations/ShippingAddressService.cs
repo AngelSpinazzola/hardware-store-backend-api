@@ -67,10 +67,6 @@ namespace EcommerceAPI.Services.Implementations
             {
                 throw new ArgumentException("Código postal inválido");
             }
-            if (!IsValidArgentinianDni(sanitizedAddress.AuthorizedPersonDni))
-            {
-                throw new ArgumentException("Formato de DNI inválido");
-            }
 
             var address = new ShippingAddress
             {
@@ -86,10 +82,6 @@ namespace EcommerceAPI.Services.Implementations
                 Province = sanitizedAddress.Province,
                 City = sanitizedAddress.City,
                 Observations = sanitizedAddress.Observations,
-                AuthorizedPersonFirstName = sanitizedAddress.AuthorizedPersonFirstName,
-                AuthorizedPersonLastName = sanitizedAddress.AuthorizedPersonLastName,
-                AuthorizedPersonPhone = sanitizedAddress.AuthorizedPersonPhone,
-                AuthorizedPersonDni = sanitizedAddress.AuthorizedPersonDni,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -130,10 +122,6 @@ namespace EcommerceAPI.Services.Implementations
             {
                 throw new ArgumentException("Código postal inválido");
             }
-            if (!IsValidArgentinianDni(sanitizedAddress.AuthorizedPersonDni))
-            {
-                throw new ArgumentException("Formato de DNI inválido");
-            }
 
             address.AddressType = sanitizedAddress.AddressType;
             address.Street = sanitizedAddress.Street;
@@ -146,10 +134,6 @@ namespace EcommerceAPI.Services.Implementations
             address.Province = sanitizedAddress.Province;
             address.City = sanitizedAddress.City;
             address.Observations = sanitizedAddress.Observations;
-            address.AuthorizedPersonFirstName = sanitizedAddress.AuthorizedPersonFirstName;
-            address.AuthorizedPersonLastName = sanitizedAddress.AuthorizedPersonLastName;
-            address.AuthorizedPersonPhone = sanitizedAddress.AuthorizedPersonPhone;
-            address.AuthorizedPersonDni = sanitizedAddress.AuthorizedPersonDni;
             address.UpdatedAt = DateTime.UtcNow;
 
             var result = await _shippingAddressRepository.UpdateAsync(addressId, address) != null;
@@ -205,11 +189,7 @@ namespace EcommerceAPI.Services.Implementations
                 PostalCode = SecurityHelper.SanitizeInput(dto.PostalCode),
                 Province = SecurityHelper.SanitizeInput(dto.Province),
                 City = SecurityHelper.SanitizeInput(dto.City),
-                Observations = SecurityHelper.SanitizeInput(dto.Observations),
-                AuthorizedPersonFirstName = SecurityHelper.SanitizeName(dto.AuthorizedPersonFirstName),
-                AuthorizedPersonLastName = SecurityHelper.SanitizeName(dto.AuthorizedPersonLastName),
-                AuthorizedPersonPhone = SecurityHelper.SanitizePhone(dto.AuthorizedPersonPhone),
-                AuthorizedPersonDni = SecurityHelper.SanitizeInput(dto.AuthorizedPersonDni)
+                Observations = SecurityHelper.SanitizeInput(dto.Observations)
             };
         }
 
@@ -227,11 +207,7 @@ namespace EcommerceAPI.Services.Implementations
                 PostalCode = SecurityHelper.SanitizeInput(dto.PostalCode),
                 Province = SecurityHelper.SanitizeInput(dto.Province),
                 City = SecurityHelper.SanitizeInput(dto.City),
-                Observations = SecurityHelper.SanitizeInput(dto.Observations),
-                AuthorizedPersonFirstName = SecurityHelper.SanitizeName(dto.AuthorizedPersonFirstName),
-                AuthorizedPersonLastName = SecurityHelper.SanitizeName(dto.AuthorizedPersonLastName),
-                AuthorizedPersonPhone = SecurityHelper.SanitizePhone(dto.AuthorizedPersonPhone),
-                AuthorizedPersonDni = SecurityHelper.SanitizeInput(dto.AuthorizedPersonDni)
+                Observations = SecurityHelper.SanitizeInput(dto.Observations)
             };
         }
 
@@ -252,10 +228,6 @@ namespace EcommerceAPI.Services.Implementations
                 Province = address.Province,
                 City = address.City,
                 Observations = address.Observations,
-                AuthorizedPersonFirstName = address.AuthorizedPersonFirstName,
-                AuthorizedPersonLastName = address.AuthorizedPersonLastName,
-                AuthorizedPersonPhone = address.AuthorizedPersonPhone,
-                AuthorizedPersonDni = address.AuthorizedPersonDni,
                 IsActive = address.IsActive,
                 CreatedAt = address.CreatedAt,
                 UpdatedAt = address.UpdatedAt
@@ -282,16 +254,5 @@ namespace EcommerceAPI.Services.Implementations
                    postalCode.Length >= 4 &&
                    postalCode.All(c => char.IsDigit(c) || c == ' ' || c == '-');
         }
-
-        private bool IsValidArgentinianDni(string dni)
-        {
-            if (string.IsNullOrEmpty(dni)) return false;
-
-            // Valida que tenga exactamente entre 7 y 8 dígitos sin espacios
-            return dni.Length >= 7 &&
-                   dni.Length <= 8 &&
-                   dni.All(char.IsDigit);
-        }
-
     }
 }

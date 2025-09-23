@@ -87,10 +87,6 @@ namespace EcommerceAPI.Repositories.Implementations
                 existingAddress.Province = address.Province;
                 existingAddress.City = address.City;
                 existingAddress.Observations = address.Observations;
-                existingAddress.AuthorizedPersonFirstName = address.AuthorizedPersonFirstName;
-                existingAddress.AuthorizedPersonLastName = address.AuthorizedPersonLastName;
-                existingAddress.AuthorizedPersonPhone = address.AuthorizedPersonPhone;
-                existingAddress.AuthorizedPersonDni = address.AuthorizedPersonDni;
                 existingAddress.IsActive = address.IsActive;
                 existingAddress.UpdatedAt = address.UpdatedAt;
 

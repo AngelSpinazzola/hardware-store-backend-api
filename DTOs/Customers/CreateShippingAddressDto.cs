@@ -5,30 +5,6 @@ namespace EcommerceAPI.DTOs.Customers
 {
     public class CreateShippingAddressDto
     {
-        // Datos de quien recibirá el envio
-
-        [Required(ErrorMessage = "El nombre es requerido")]
-        [StringLength(50, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 50 caracteres")]
-        [RegularExpression(@"^[a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\s\-\.]+$", ErrorMessage = "El nombre solo puede contener letras, espacios, guiones y puntos")]
-        public string AuthorizedPersonFirstName { get; set; }
-
-        [Required(ErrorMessage = "El apellido es requerido")]
-        [StringLength(50, MinimumLength = 2, ErrorMessage = "El apellido debe tener entre 2 y 50 caracteres")]
-        [RegularExpression(@"^[a-zA-ZáéíóúñÁÉÍÓÚÑüÜ\s\-\.]+$", ErrorMessage = "El apellido solo puede contener letras, espacios, guiones y puntos")]
-        public string AuthorizedPersonLastName { get; set; }
-
-        [Required(ErrorMessage = "El teléfono es requerido")]
-        [StringLength(20, MinimumLength = 8, ErrorMessage = "El teléfono debe tener entre 8 y 20 caracteres")]
-        [RegularExpression(@"^[\d\s\-\+\(\)]{8,20}$", ErrorMessage = "Formato de teléfono inválido")]
-        public string AuthorizedPersonPhone { get; set; }
-
-        [Required(ErrorMessage = "El DNI es requerido")]
-        [StringLength(12, MinimumLength = 7, ErrorMessage = "El DNI debe tener entre 7 y 12 caracteres")]
-        [RegularExpression(@"^[\d\.\-\s]{7,12}$", ErrorMessage = "Formato de DNI inválido")]
-        public string AuthorizedPersonDni { get; set; }
-
-        // Dirección de envío
-
         [Required(ErrorMessage = "El tipo de domicilio es requerido")]
         [RegularExpression(@"^(Casa|Trabajo)$", ErrorMessage = "El tipo de domicilio debe ser Casa o Trabajo")]
         public string AddressType { get; set; }

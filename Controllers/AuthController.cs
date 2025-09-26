@@ -84,8 +84,8 @@ namespace EcommerceAPI.Controllers
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = HttpContext.Request.IsHttps, 
-                    SameSite = SameSiteMode.Strict,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddDays(7), 
                     Path = "/"
                 };
@@ -179,8 +179,8 @@ namespace EcommerceAPI.Controllers
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = HttpContext.Request.IsHttps, 
-                    SameSite = SameSiteMode.Strict,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddDays(7), 
                     Path = "/"
                 };

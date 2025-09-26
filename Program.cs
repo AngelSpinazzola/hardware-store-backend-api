@@ -187,6 +187,16 @@ app.Use(async (context, next) =>
 
 app.UseRateLimiter();
 
+app.Use(async (context, next) =>
+{
+    var token = context.Request.Cookies["token"];
+    if (!string.IsNullOrEmpty(token) && !context.Request.Headers.ContainsKey("Authorization"))
+    {
+        context.Request.Headers.Add("Authorization", $"Bearer {token}");
+    }
+    await next();
+});
+
 app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseAuthorization();

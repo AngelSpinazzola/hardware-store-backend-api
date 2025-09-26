@@ -52,7 +52,7 @@ namespace EcommerceAPI.Controllers
                     return BadRequest(new { message = validationResult.ErrorMessage });
                 }
 
-                // Normalizar email (simple)
+                // Normaliza email (simple)
                 var normalizedEmail = registerDto.Email.Trim().ToLowerInvariant();
 
                 // Verifica si el email ya existe
@@ -80,23 +80,35 @@ namespace EcommerceAPI.Controllers
                 // Genera token JWT
                 var token = _jwtHelper.GenerateToken(user.Id, user.Email, user.Role);
 
-                var response = new AuthResponseDto
+                // Configuración de cookie httpOnly
+                var cookieOptions = new CookieOptions
                 {
-                    Token = token,
-                    User = new UserDto
-                    {
-                        Id = user.Id,
-                        Email = user.Email,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                        Role = user.Role
-                    }
+                    HttpOnly = true,
+                    Secure = HttpContext.Request.IsHttps, 
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(7), 
+                    Path = "/"
+                };
+
+                Response.Cookies.Append("token", token, cookieOptions);
+
+                var userDto = new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Role = user.Role
                 };
 
                 Log.Information("User registered successfully: UserId={UserId}, Email={Email}",
                     user.Id, user.Email);
 
-                return Ok(response);
+                return Ok(new
+                {
+                    user = userDto,
+                    message = "Registro exitoso"
+                });
             }
             catch (Exception ex)
             {
@@ -164,28 +176,59 @@ namespace EcommerceAPI.Controllers
                 // Genera token JWT
                 var token = _jwtHelper.GenerateToken(user.Id, user.Email, user.Role);
 
-                var response = new AuthResponseDto
+                var cookieOptions = new CookieOptions
                 {
-                    Token = token,
-                    User = new UserDto
-                    {
-                        Id = user.Id,
-                        Email = user.Email,
-                        FirstName = user.FirstName,
-                        LastName = user.LastName,
-                        Role = user.Role
-                    }
+                    HttpOnly = true,
+                    Secure = HttpContext.Request.IsHttps, 
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(7), 
+                    Path = "/"
+                };
+
+                Response.Cookies.Append("token", token, cookieOptions);
+
+                var userDto = new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Role = user.Role
                 };
 
                 Log.Information("Login successful for user: {UserId} from IP: {IP}",
                     user.Id, HttpContext.Connection.RemoteIpAddress);
 
-                return Ok(response);
+                return Ok(new
+                {
+                    user = userDto,
+                    message = "Login exitoso"
+                });
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Login error for email: {Email} from IP: {IP}",
                     loginDto?.Email, HttpContext.Connection.RemoteIpAddress);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public IActionResult Logout()
+        {
+            try
+            {
+                // Elimina cookie del token
+                Response.Cookies.Delete("token");
+
+                Log.Information("User logged out successfully");
+
+                return Ok(new { message = "Logout exitoso" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Logout error");
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }

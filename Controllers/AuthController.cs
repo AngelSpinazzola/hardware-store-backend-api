@@ -1,14 +1,15 @@
 ﻿using EcommerceAPI.Data;
+using EcommerceAPI.DTOs.Auth;
+using EcommerceAPI.DTOs.Common;
 using EcommerceAPI.Helpers;
 using EcommerceAPI.Models;
+using EcommerceAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using Serilog;
-using EcommerceAPI.DTOs.Auth;
-using EcommerceAPI.DTOs.Common;
+using System.Security.Claims;
 
 namespace EcommerceAPI.Controllers
 {
@@ -18,11 +19,17 @@ namespace EcommerceAPI.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly JwtHelper _jwtHelper;
+        private readonly IGoogleAuthService _googleAuthService;
 
-        public AuthController(ApplicationDbContext context, JwtHelper jwtHelper)
+
+        public AuthController(
+            ApplicationDbContext context,
+            JwtHelper jwtHelper,
+            IGoogleAuthService googleAuthService)
         {
             _context = context;
             _jwtHelper = jwtHelper;
+            _googleAuthService = googleAuthService;
         }
 
         [HttpPost("register")]
@@ -86,7 +93,7 @@ namespace EcommerceAPI.Controllers
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.None,
-                    Expires = DateTime.UtcNow.AddDays(7), 
+                    Expires = DateTime.UtcNow.AddDays(7),
                     Path = "/"
                 };
 
@@ -113,6 +120,122 @@ namespace EcommerceAPI.Controllers
             catch (Exception ex)
             {
                 Log.Error(ex, "Registration failed for email: {Email}", registerDto?.Email);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost("google")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> GoogleLogin(GoogleLoginDto googleLoginDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    Log.Warning("Invalid Google login attempt from IP: {IP}",
+                        HttpContext.Connection.RemoteIpAddress);
+                    return BadRequest(ModelState);
+                }
+
+                // Valida token con Google
+                var payload = await _googleAuthService.ValidateGoogleTokenAsync(googleLoginDto.IdToken);
+
+                var normalizedEmail = payload.Email.Trim().ToLowerInvariant();
+
+                Log.Information("Google login attempt for email: {Email} from IP: {IP}",
+                    normalizedEmail, HttpContext.Connection.RemoteIpAddress);
+
+                // Busca usuario existente
+                var user = await _context.Users
+                    .Where(u => u.Email == normalizedEmail && u.IsActive)
+                    .FirstOrDefaultAsync();
+
+                if (user == null)
+                {
+                    // Crea nuevo usuario de Google
+                    user = new User
+                    {
+                        Email = normalizedEmail,
+                        FirstName = payload.GivenName ?? "Usuario",
+                        LastName = payload.FamilyName ?? "Google",
+                        Role = "Customer",
+                        IsGoogleUser = true,
+                        GoogleId = payload.Subject,
+                        AvatarUrl = payload.Picture,
+                        CreatedAt = DateTime.UtcNow,
+                        IsActive = true,
+                        PasswordHash = null // Usuario de Google no tiene contraseña
+                    };
+
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync();
+
+                    Log.Information("New Google user created: UserId={UserId}, Email={Email}",
+                        user.Id, user.Email);
+                }
+                else if (!user.IsGoogleUser)
+                {
+                    // Usuario existe pero no es de Google - vincular cuenta
+                    user.IsGoogleUser = true;
+                    user.GoogleId = payload.Subject;
+                    user.AvatarUrl = payload.Picture;
+                    await _context.SaveChangesAsync();
+
+                    Log.Information("Existing user linked to Google: UserId={UserId}", user.Id);
+                }
+                else
+                {
+                    user.AvatarUrl = payload.Picture; 
+                }
+
+                // Actualiza último login
+                user.LastLoginAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                // Genera token JWT
+                var token = _jwtHelper.GenerateToken(user.Id, user.Email, user.Role);
+
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddDays(7),
+                    Path = "/"
+                };
+
+                Response.Cookies.Append("token", token, cookieOptions);
+
+                var userDto = new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Role = user.Role,
+                    IsGoogleUser = user.IsGoogleUser,
+                    AvatarUrl = user.AvatarUrl
+                };
+
+                Log.Information("Google login successful for user: {UserId} from IP: {IP}",
+                    user.Id, HttpContext.Connection.RemoteIpAddress);
+
+                return Ok(new
+                {
+                    user = userDto,
+                    message = "Login con Google exitoso"
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Log.Warning("Google token validation failed from IP: {IP} - {Error}",
+                    HttpContext.Connection.RemoteIpAddress, ex.Message);
+                return Unauthorized(new { message = "Token de Google inválido" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Google login error from IP: {IP}",
+                    HttpContext.Connection.RemoteIpAddress);
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
@@ -161,6 +284,13 @@ namespace EcommerceAPI.Controllers
                     return Unauthorized(new { message = "Credenciales inválidas" });
                 }
 
+                if (user.IsGoogleUser && string.IsNullOrEmpty(user.PasswordHash))
+                {
+                    Log.Warning("Login attempt with email/password for Google user: {Email} from IP: {IP}",
+                        normalizedEmail, HttpContext.Connection.RemoteIpAddress);
+                    return BadRequest(new { message = "Esta cuenta usa autenticación con Google. Por favor, usa el botón 'Continuar con Google'." });
+                }
+
                 // Verifica contraseña
                 if (!PasswordHelper.VerifyPassword(loginDto.Password, user.PasswordHash))
                 {
@@ -181,7 +311,7 @@ namespace EcommerceAPI.Controllers
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.None,
-                    Expires = DateTime.UtcNow.AddDays(7), 
+                    Expires = DateTime.UtcNow.AddDays(7),
                     Path = "/"
                 };
 
@@ -240,7 +370,6 @@ namespace EcommerceAPI.Controllers
         {
             try
             {
-                // OrderAuthorizationHelper para extraer ID
                 var userInfo = OrderAuthorizationHelper.GetUserIdFromClaims(User);
                 if (!userInfo.IsValid)
                 {
@@ -257,7 +386,9 @@ namespace EcommerceAPI.Controllers
                         Email = u.Email,
                         FirstName = u.FirstName,
                         LastName = u.LastName,
-                        Role = u.Role
+                        Role = u.Role,
+                        IsGoogleUser = u.IsGoogleUser,
+                        AvatarUrl = u.AvatarUrl
                     })
                     .FirstOrDefaultAsync();
 

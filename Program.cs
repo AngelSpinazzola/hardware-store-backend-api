@@ -149,6 +149,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductImageService, ProductImageService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IShippingAddressRepository, ShippingAddressRepository>();
+builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IShippingAddressService, ShippingAddressService>();
 
 var app = builder.Build();
@@ -175,6 +176,16 @@ app.Use(async (context, next) =>
     context.Response.Headers.Append("X-Frame-Options", "DENY");
     context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
     context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    context.Response.Headers.Append("Content-Security-Policy",
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "img-src 'self' data: https: blob:; " +
+        "font-src 'self' https://fonts.gstatic.com; " +
+        "connect-src 'self' https://accounts.google.com https://ecommerce-api-production-50fd.up.railway.app; " +
+        "frame-src 'self' https://accounts.google.com"
+    );
 
     if (app.Environment.IsProduction())
     {

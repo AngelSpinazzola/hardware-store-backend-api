@@ -534,21 +534,21 @@ namespace EcommerceAPI.Controllers
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
         {
+
             try
             {
                 var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+
                 var user = await _context.Users
                     .Where(u => u.Email == normalizedEmail && u.IsActive)
                     .FirstOrDefaultAsync();
 
                 if (user == null || (user.IsGoogleUser && string.IsNullOrEmpty(user.PasswordHash)))
                 {
-                    Log.Warning("Password reset requested for non-existent or Google-only user: {Email}", normalizedEmail);
                     return Ok(new { message = "Si el email existe, recibirás un correo con instrucciones" });
                 }
 
-                var resetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
-                    .Replace("+", "").Replace("/", "").Replace("=", "").Substring(0, 32);
+                var resetToken = Guid.NewGuid().ToString("N");
 
                 var passwordResetToken = new PasswordResetToken
                 {
@@ -562,17 +562,7 @@ namespace EcommerceAPI.Controllers
                 _context.PasswordResetTokens.Add(passwordResetToken);
                 await _context.SaveChangesAsync();
 
-                Log.Information("Token guardado en DB, ahora intentando enviar email a: {Email}", normalizedEmail);
-
-                try
-                {
-                    await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
-                    Log.Information("Email enviado exitosamente a: {Email}", normalizedEmail);
-                }
-                catch (Exception emailEx)
-                {
-                    Log.Error(emailEx, "Falló envío de email a: {Email}", normalizedEmail);
-                }
+                await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
 
                 return Ok(new { message = "Si el email existe, recibirás un correo con instrucciones" });
             }

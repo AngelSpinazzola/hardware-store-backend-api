@@ -102,12 +102,15 @@ namespace EcommerceAPI.Services.Implementations
 
             using var smtp = new SmtpClient(_configuration["Email:SmtpServer"])
             {
-                Port = int.Parse(_configuration["Email:Port"]),
+                Port = 587,
                 Credentials = new NetworkCredential(
-                    _configuration["Email:Username"],
-                    _configuration["Email:Password"]
-                ),
-                EnableSsl = true
+                _configuration["Email:Username"],
+                _configuration["Email:Password"]
+            ),
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Timeout = 90000
             };
 
             await smtp.SendMailAsync(message);

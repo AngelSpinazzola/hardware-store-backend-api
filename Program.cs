@@ -152,6 +152,7 @@ builder.Services.AddScoped<IShippingAddressRepository, ShippingAddressRepository
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 builder.Services.AddScoped<IShippingAddressService, ShippingAddressService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

@@ -14,7 +14,8 @@ namespace EcommerceAPI.Data
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
-        public DbSet<ShippingAddress> ShippingAddresses { get; set; } 
+        public DbSet<ShippingAddress> ShippingAddresses { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -185,6 +186,28 @@ namespace EcommerceAPI.Data
                       .WithMany()
                       .HasForeignKey(e => e.ProductId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // CONFIGURACIÓN DE PASSWORDRESETTOKEN
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Token).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
+                entity.Property(e => e.ExpiresAt).IsRequired();
+                entity.Property(e => e.IsUsed).HasDefaultValue(false);
+
+                // Relación con User
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Índice para optimizar búsquedas por token
+                entity.HasIndex(e => e.Token);
+
+                // Índice para limpiar tokens expirados
+                entity.HasIndex(e => e.ExpiresAt);
             });
         }
     }

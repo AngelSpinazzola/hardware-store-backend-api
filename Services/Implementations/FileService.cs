@@ -10,7 +10,7 @@ namespace EcommerceAPI.Services.Implementations
         private readonly ILogger<FileService> _logger;
         private readonly string[] _allowedImageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
         private readonly string[] _allowedDocumentExtensions = { ".pdf" }; 
-        private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
+        private const long MaxFileSize = 10 * 1024 * 1024;
 
         public FileService(IConfiguration configuration, ILogger<FileService> logger)
         {
@@ -26,7 +26,6 @@ namespace EcommerceAPI.Services.Implementations
 
         public async Task<string> SaveImageAsync(IFormFile imageFile, string folder = "products")
         {
-            Console.WriteLine($"🔍 SaveImageAsync called with: {imageFile.FileName}");
 
             try
             {

@@ -3,6 +3,7 @@ using EcommerceAPI.DTOs.Auth;
 using EcommerceAPI.DTOs.Common;
 using EcommerceAPI.Helpers;
 using EcommerceAPI.Models;
+using EcommerceAPI.Services.Implementations;
 using EcommerceAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,16 +21,18 @@ namespace EcommerceAPI.Controllers
         private readonly ApplicationDbContext _context;
         private readonly JwtHelper _jwtHelper;
         private readonly IGoogleAuthService _googleAuthService;
-
+        private readonly IEmailService _emailService;
 
         public AuthController(
             ApplicationDbContext context,
             JwtHelper jwtHelper,
-            IGoogleAuthService googleAuthService)
+            IGoogleAuthService googleAuthService,
+            IEmailService emailService)
         {
             _context = context;
             _jwtHelper = jwtHelper;
             _googleAuthService = googleAuthService;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
@@ -523,6 +526,88 @@ namespace EcommerceAPI.Controllers
             {
                 Log.Error(ex, "Password change failed for user: {UserId}",
                     User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost("forgot-password")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        {
+            try
+            {
+                var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+                var user = await _context.Users
+                    .Where(u => u.Email == normalizedEmail && u.IsActive)
+                    .FirstOrDefaultAsync();
+
+                if (user == null || (user.IsGoogleUser && string.IsNullOrEmpty(user.PasswordHash)))
+                {
+                    Log.Warning("Password reset requested for non-existent or Google-only user: {Email}", normalizedEmail);
+                    return Ok(new { message = "Si el email existe, recibirás un correo con instrucciones" });
+                }
+
+                var resetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
+                    .Replace("+", "").Replace("/", "").Replace("=", "").Substring(0, 32);
+
+                var passwordResetToken = new PasswordResetToken
+                {
+                    UserId = user.Id,
+                    Token = resetToken,
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddHours(1),
+                    IsUsed = false
+                };
+
+                _context.PasswordResetTokens.Add(passwordResetToken);
+                await _context.SaveChangesAsync();
+
+                await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
+
+                Log.Information("Password reset email sent to: {Email}", normalizedEmail);
+                return Ok(new { message = "Si el email existe, recibirás un correo con instrucciones" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error processing forgot password request");
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost("reset-password")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        {
+            try
+            {
+                var tokenRecord = await _context.PasswordResetTokens
+                    .Include(t => t.User)
+                    .Where(t => t.Token == dto.Token && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow)
+                    .FirstOrDefaultAsync();
+
+                if (tokenRecord == null)
+                {
+                    Log.Warning("Invalid or expired reset token attempted");
+                    return BadRequest(new { message = "Token inválido o expirado" });
+                }
+
+                var passwordValidation = SecurityHelper.ValidatePassword(dto.NewPassword);
+                if (!passwordValidation.IsValid)
+                {
+                    return BadRequest(new { message = passwordValidation.ErrorMessage });
+                }
+
+                tokenRecord.User.PasswordHash = PasswordHelper.HashPassword(dto.NewPassword);
+                tokenRecord.IsUsed = true;
+
+                await _context.SaveChangesAsync();
+
+                Log.Information("Password reset successfully for user: {UserId}", tokenRecord.UserId);
+                return Ok(new { message = "Contraseña actualizada correctamente" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error resetting password");
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }

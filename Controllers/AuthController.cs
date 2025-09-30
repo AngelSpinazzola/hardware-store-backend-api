@@ -562,9 +562,17 @@ namespace EcommerceAPI.Controllers
                 _context.PasswordResetTokens.Add(passwordResetToken);
                 await _context.SaveChangesAsync();
 
-                await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
+                try
+                {
+                    await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
+                    Log.Information("Password reset email sent successfully to: {Email}", normalizedEmail);
+                }
+                catch (Exception emailEx)
+                {
+                    Log.Error(emailEx, "FAILED to send password reset email to: {Email}. Error: {Message}",
+                        normalizedEmail, emailEx.Message);
+                }
 
-                Log.Information("Password reset email sent to: {Email}", normalizedEmail);
                 return Ok(new { message = "Si el email existe, recibirás un correo con instrucciones" });
             }
             catch (Exception ex)

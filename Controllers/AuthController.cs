@@ -5,6 +5,7 @@ using EcommerceAPI.Helpers;
 using EcommerceAPI.Models;
 using EcommerceAPI.Services.Implementations;
 using EcommerceAPI.Services.Interfaces;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -140,22 +141,30 @@ namespace EcommerceAPI.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // Valida token con Google
-                var payload = await _googleAuthService.ValidateGoogleTokenAsync(googleLoginDto.IdToken);
+                GoogleJsonWebSignature.Payload payload;
+
+                // Detecta si es ID Token (credential) o Access Token
+                if (googleLoginDto.IdToken.StartsWith("ya29."))
+                {
+                    // Es un access token
+                    payload = await _googleAuthService.ValidateGoogleAccessTokenAsync(googleLoginDto.IdToken);
+                }
+                else
+                {
+                    // Es un ID token (credential)
+                    payload = await _googleAuthService.ValidateGoogleTokenAsync(googleLoginDto.IdToken);
+                }
 
                 var normalizedEmail = payload.Email.Trim().ToLowerInvariant();
-
                 Log.Information("Google login attempt for email: {Email} from IP: {IP}",
                     normalizedEmail, HttpContext.Connection.RemoteIpAddress);
 
-                // Busca usuario existente
                 var user = await _context.Users
                     .Where(u => u.Email == normalizedEmail && u.IsActive)
                     .FirstOrDefaultAsync();
 
                 if (user == null)
                 {
-                    // Crea nuevo usuario de Google
                     user = new User
                     {
                         Email = normalizedEmail,
@@ -167,37 +176,30 @@ namespace EcommerceAPI.Controllers
                         AvatarUrl = payload.Picture,
                         CreatedAt = DateTime.UtcNow,
                         IsActive = true,
-                        PasswordHash = null // Usuario de Google no tiene contraseña
+                        PasswordHash = null
                     };
-
                     _context.Users.Add(user);
                     await _context.SaveChangesAsync();
-
                     Log.Information("New Google user created: UserId={UserId}, Email={Email}",
                         user.Id, user.Email);
                 }
                 else if (!user.IsGoogleUser)
                 {
-                    // Usuario existe pero no es de Google - vincular cuenta
                     user.IsGoogleUser = true;
                     user.GoogleId = payload.Subject;
                     user.AvatarUrl = payload.Picture;
                     await _context.SaveChangesAsync();
-
                     Log.Information("Existing user linked to Google: UserId={UserId}", user.Id);
                 }
                 else
                 {
-                    user.AvatarUrl = payload.Picture; 
+                    user.AvatarUrl = payload.Picture;
                 }
 
-                // Actualiza último login
                 user.LastLoginAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                // Genera token JWT
                 var token = _jwtHelper.GenerateToken(user.Id, user.Email, user.Role);
-
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
@@ -206,7 +208,6 @@ namespace EcommerceAPI.Controllers
                     Expires = DateTime.UtcNow.AddDays(7),
                     Path = "/"
                 };
-
                 Response.Cookies.Append("token", token, cookieOptions);
 
                 var userDto = new UserDto
@@ -281,7 +282,7 @@ namespace EcommerceAPI.Controllers
                     Log.Warning("Login failed - User not found: {Email} from IP: {IP}",
                         normalizedEmail, HttpContext.Connection.RemoteIpAddress);
 
-                    // Protección contra timing attacks: simular verificación de password
+                    // Protección contra timing attacks
                     PasswordHelper.VerifyPassword("dummy", "$2a$11$dummy.hash.to.prevent.timing.attacks");
 
                     return Unauthorized(new { message = "Credenciales inválidas" });

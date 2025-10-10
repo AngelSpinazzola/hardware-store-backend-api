@@ -10,7 +10,8 @@ namespace EcommerceAPI.Services.Implementations
         private readonly ILogger<FileService> _logger;
         private readonly string[] _allowedImageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
         private readonly string[] _allowedDocumentExtensions = { ".pdf" }; 
-        private const long MaxFileSize = 10 * 1024 * 1024;
+        private const long MaxFileSize = 5 * 1024 * 1024; // Para comprobantes
+        private const long MaxProductImageSize = 2 * 1024 * 1024; // Para productos
 
         public FileService(IConfiguration configuration, ILogger<FileService> logger)
         {
@@ -38,7 +39,7 @@ namespace EcommerceAPI.Services.Implementations
                 }
                 else
                 {
-                    if (!IsValidImageFile(imageFile))
+                    if (!IsValidImageFile(imageFile, folder == "products"))
                     {
                         throw new ArgumentException("Archivo de imagen no válido");
                     }
@@ -131,12 +132,13 @@ namespace EcommerceAPI.Services.Implementations
             }
         }
 
-        public bool IsValidImageFile(IFormFile file)
+        public bool IsValidImageFile(IFormFile file, bool isProductImage = false)
         {
             if (file == null || file.Length == 0)
                 return false;
 
-            if (file.Length > MaxFileSize)
+            var maxSize = isProductImage ? MaxProductImageSize : MaxFileSize;
+            if (file.Length > maxSize)
                 return false;
 
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -190,7 +192,6 @@ namespace EcommerceAPI.Services.Implementations
 
             return uploadedUrls;
         }
-
         private string ExtractPublicIdFromUrl(string imageUrl)
         {
             try
@@ -218,7 +219,5 @@ namespace EcommerceAPI.Services.Implementations
                 return string.Empty;
             }
         }
-
-
     }
 }

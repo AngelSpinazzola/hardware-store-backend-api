@@ -31,9 +31,9 @@
             if (file == null || file.Length == 0)
                 return (false, "Archivo vacío");
 
-            // Tamaño máximo por imagen: 3MB
-            if (file.Length > 3 * 1024 * 1024)
-                return (false, "La imagen no puede exceder 3MB");
+            // Tamaño máximo por imagen: 2MB
+            if (file.Length > 2 * 1024 * 1024)
+                return (false, "La imagen no puede exceder 2MB");
 
             // Solo imágenes
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
@@ -46,14 +46,14 @@
             if (!allowedMimeTypes.Contains(file.ContentType.ToLowerInvariant()))
                 return (false, "Tipo de contenido no válido");
 
-            // Valida magic numbers
+            // Validar magic numbers
             return ValidateFileSignature(file);
         }
 
         public static (bool IsValid, string ErrorMessage) ValidateMultipleProductImages(IFormFile[] files, int maxCount = 10)
         {
             if (files == null || !files.Any())
-                return (false, "No se proporcionaron archivos");
+                return (true, "");
 
             if (files.Length > maxCount)
                 return (false, $"Máximo {maxCount} archivos permitidos");

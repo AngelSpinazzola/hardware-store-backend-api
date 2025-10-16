@@ -47,6 +47,23 @@ namespace EcommerceAPI.Repositories.Implementations
             return true;
         }
 
+        public async Task<ProductImage?> UpdateAsync(int id, ProductImage productImage)
+        {
+            var existingImage = await _context.ProductImages.FindAsync(id);
+            if (existingImage == null)
+                return null;
+
+            // Actualizar solo los campos que pueden cambiar
+            existingImage.IsMain = productImage.IsMain;
+            existingImage.DisplayOrder = productImage.DisplayOrder;
+            existingImage.ImageUrl = productImage.ImageUrl;
+
+            _context.ProductImages.Update(existingImage);
+            await _context.SaveChangesAsync();
+
+            return existingImage;
+        }
+
         public async Task<bool> SetMainImageAsync(int productId, int imageId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();

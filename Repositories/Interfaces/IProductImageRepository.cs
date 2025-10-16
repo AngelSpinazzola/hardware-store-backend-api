@@ -12,5 +12,6 @@ namespace EcommerceAPI.Repositories.Interfaces
         Task<bool> UpdateDisplayOrderAsync(int imageId, int displayOrder);
         Task<bool> UpdateMultipleDisplayOrderAsync(Dictionary<int, int> imageOrders);
         Task<ProductImage?> GetMainImageAsync(int productId);
+        Task<ProductImage?> UpdateAsync(int id, ProductImage productImage);
     }
 }

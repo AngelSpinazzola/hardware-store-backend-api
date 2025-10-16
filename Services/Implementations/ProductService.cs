@@ -12,6 +12,7 @@ namespace EcommerceAPI.Services.Implementations
         private readonly IProductRepository _productRepository;
         private readonly IProductImageRepository _productImageRepository;
         private readonly IFileService _fileService;
+        private const string DEFAULT_PLACEHOLDER = "https://placehold.co/600x600/e5e7eb/6b7280/png?text=Sin+Imagen";
 
         public ProductService(
             IProductRepository productRepository,
@@ -26,6 +27,24 @@ namespace EcommerceAPI.Services.Implementations
         public async Task<IEnumerable<ProductListDto>> GetAllProductsAsync()
         {
             var products = await _productRepository.GetAllAsync();
+            return products.Select(p => new ProductListDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                Stock = p.Stock,
+                Category = p.Category,
+                Brand = p.Brand,
+                Model = p.Model,
+                Platform = p.Platform,
+                MainImageUrl = p.MainImageUrl,
+                IsActive = p.IsActive
+            });
+        }
+
+        public async Task<IEnumerable<ProductListDto>> GetAllProductsForAdminAsync()
+        {
+            var products = await _productRepository.GetAllForAdminAsync(); 
             return products.Select(p => new ProductListDto
             {
                 Id = p.Id,
@@ -78,8 +97,6 @@ namespace EcommerceAPI.Services.Implementations
 
         public async Task<ProductDto> CreateProductAsync(CreateProductDto createProductDto)
         {
-            var defaultPlaceholder = "https://res.cloudinary.com/demo/image/upload/v1642151234/placeholder-product.jpg";
-
             var product = new Product
             {
                 Name = createProductDto.Name.Trim(),
@@ -90,13 +107,13 @@ namespace EcommerceAPI.Services.Implementations
                 Brand = createProductDto.Brand.Trim(),
                 Model = createProductDto.Model?.Trim() ?? string.Empty,
                 Platform = createProductDto.Platform?.Trim(),
-                MainImageUrl = defaultPlaceholder,
+                MainImageUrl = DEFAULT_PLACEHOLDER,
                 IsActive = true
             };
 
             var createdProduct = await _productRepository.CreateAsync(product);
 
-            string mainImageUrl = defaultPlaceholder;
+            string mainImageUrl = DEFAULT_PLACEHOLDER;
             var productImages = new List<ProductImage>();
 
             if (createProductDto.ImageFiles != null && createProductDto.ImageFiles.Length > 0)
@@ -200,38 +217,71 @@ namespace EcommerceAPI.Services.Implementations
                 UpdatedAt = DateTime.UtcNow
             };
 
+            // Obtener imágenes existentes antes de procesar nuevas
+            var existingImages = await _productImageRepository.GetByProductIdAsync(id);
+
+            // Procesar nuevas imágenes si las hay
             if (updateProductDto.ImageFiles != null && updateProductDto.ImageFiles.Length > 0)
             {
-                var existingImages = await _productImageRepository.GetByProductIdAsync(id);
                 int startOrder = existingImages.Any() ? existingImages.Max(img => img.DisplayOrder) + 1 : 0;
+                bool shouldSetAsMain = !existingImages.Any();
 
                 for (int i = 0; i < updateProductDto.ImageFiles.Length; i++)
                 {
                     var imageFile = updateProductDto.ImageFiles[i];
                     var imageUrl = await _fileService.SaveImageAsync(imageFile);
+
                     var productImage = new ProductImage
                     {
                         ProductId = id,
                         ImageUrl = imageUrl,
                         DisplayOrder = startOrder + i,
-                        IsMain = !existingImages.Any() && i == 0
+                        IsMain = shouldSetAsMain && i == 0
                     };
+
                     await _productImageRepository.CreateAsync(productImage);
 
-                    if (!existingImages.Any() && i == 0)
+                    // Si es la primera imagen y no había otras, actualizar MainImageUrl
+                    if (shouldSetAsMain && i == 0)
                     {
                         product.MainImageUrl = imageUrl;
                     }
                 }
             }
 
+            // Verificar estado final de las imágenes
+            var finalImages = await _productImageRepository.GetByProductIdAsync(id);
+
+            if (!finalImages.Any())
+            {
+                product.MainImageUrl = DEFAULT_PLACEHOLDER;
+            }
+            else
+            {
+                var mainImage = finalImages.FirstOrDefault(img => img.IsMain);
+
+                if (mainImage != null)
+                {
+                    product.MainImageUrl = mainImage.ImageUrl;
+                }
+                else
+                {
+                    // Si no hay imagen principal establecida, usar la primera
+                    var firstImage = finalImages.OrderBy(img => img.DisplayOrder).First();
+                    firstImage.IsMain = true;
+                    await _productImageRepository.UpdateAsync(firstImage.Id, firstImage);
+                    product.MainImageUrl = firstImage.ImageUrl;
+                }
+            }
+
             var updatedProduct = await _productRepository.UpdateAsync(id, product);
             if (updatedProduct == null)
+            {
+                Log.Error("Failed to update product in repository: {ProductId}", id);
                 return null;
+            }
 
             var images = await _productImageRepository.GetByProductIdAsync(id);
-
-            Log.Information("Product {ProductId} updated - Found {ImageCount} images in DB", id, images.Count());
 
             return new ProductDto
             {

@@ -53,8 +53,8 @@ namespace EcommerceAPI.Services.Implementations
                 nextDisplayOrder = existingImages.Max(img => img.DisplayOrder) + 1;
             }
 
-            Console.WriteLine($"🔍 Imágenes existentes: {existingImages.Count()}");
-            Console.WriteLine($"🔍 Próximo DisplayOrder: {nextDisplayOrder}");
+            // Determina si debe establecer la primera imagen como principal
+            bool shouldSetAsMain = !existingImages.Any();
 
             // Procesa archivos de imagen
             if (createDto.ImageFiles != null && createDto.ImageFiles.Length > 0)
@@ -64,15 +64,16 @@ namespace EcommerceAPI.Services.Implementations
                     var imageFile = createDto.ImageFiles[i];
                     var imageUrl = await _fileService.SaveImageAsync(imageFile);
 
+                    // La primera imagen nueva es la principal si no había imágenes previas
+                    var isMain = shouldSetAsMain && i == 0;
+
                     var productImage = new ProductImage
                     {
                         ProductId = createDto.ProductId,
                         ImageUrl = imageUrl,
                         DisplayOrder = nextDisplayOrder + i,
-                        IsMain = createDto.MainImageIndex.HasValue && createDto.MainImageIndex.Value == i 
+                        IsMain = isMain
                     };
-
-                    Console.WriteLine($"🖼️ Creando imagen con DisplayOrder: {productImage.DisplayOrder}");
 
                     var created = await _productImageRepository.CreateAsync(productImage);
                     createdImages.Add(created);
@@ -102,13 +103,25 @@ namespace EcommerceAPI.Services.Implementations
                 }
             }
 
-            //if (createdImages.Any() && createDto.MainImageIndex.HasValue &&
-            //    createDto.MainImageIndex.Value >= 0 &&
-            //    createDto.MainImageIndex.Value < createdImages.Count)
-            //{
-            //    var mainImageIndex = createDto.MainImageIndex.Value;
-            //    await SetMainImageAsync(createDto.ProductId, createdImages[mainImageIndex].Id);
-            //}
+            // Actualizar MainImageUrl del producto si agregamos la primera imagen
+            if (createdImages.Any())
+            {
+                var mainImage = createdImages.FirstOrDefault(img => img.IsMain);
+
+                if (mainImage != null)
+                {
+                    // Actualizar el MainImageUrl del producto
+                    product.MainImageUrl = mainImage.ImageUrl;
+                    product.UpdatedAt = DateTime.UtcNow;
+                    await _productRepository.UpdateAsync(product.Id, product);
+                }
+                else if (shouldSetAsMain && createdImages.Any())
+                {
+                    var firstImage = createdImages.First();
+
+                    await SetMainImageAsync(createDto.ProductId, firstImage.Id);
+                }
+            }
 
             return createdImages.Select(img => new ProductImageDto
             {

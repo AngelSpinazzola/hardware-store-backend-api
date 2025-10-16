@@ -65,14 +65,13 @@ namespace EcommerceAPI.Controllers
             }
         }
 
-        // Devuelve todos los productos para administradores (sin paginación)
         [HttpGet("admin/all")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllProductsForAdmin()
         {
             try
             {
-                var products = await _productService.GetAllProductsAsync();
+                var products = await _productService.GetAllProductsForAdminAsync();
 
                 var response = new
                 {
@@ -84,7 +83,7 @@ namespace EcommerceAPI.Controllers
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error al obtener todos los productos para el administrador");
+                Log.Error(ex, "Error retrieving all products for admin");
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }

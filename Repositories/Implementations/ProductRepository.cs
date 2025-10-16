@@ -22,6 +22,14 @@ namespace EcommerceAPI.Repositories.Implementations
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Product>> GetAllForAdminAsync()
+        {
+            return await _context.Products
+                .AsNoTracking()  
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<Product?> GetByIdAsync(int id)
         {
             return await _context.Products
@@ -89,6 +97,7 @@ namespace EcommerceAPI.Repositories.Implementations
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
+
         public async Task<IEnumerable<Product>> SearchAsync(string searchTerm)
         {
             var normalizedTerm = searchTerm.ToLower().Trim();
@@ -96,7 +105,6 @@ namespace EcommerceAPI.Repositories.Implementations
             return await _context.Products
                 .Where(p => p.IsActive &&
                        (
-                           // Búsqueda básica - más eficiente
                            p.Name.ToLower().Contains(normalizedTerm) ||
                            p.Brand.ToLower().Contains(normalizedTerm) ||
                            p.Model.ToLower().Contains(normalizedTerm) ||
@@ -122,7 +130,6 @@ namespace EcommerceAPI.Repositories.Implementations
                 .ToListAsync();
         }
 
-        // Obtiene todas las marcas
         public async Task<IEnumerable<string>> GetBrandsAsync()
         {
             return await _context.Products

@@ -5,6 +5,7 @@ namespace EcommerceAPI.Repositories.Interfaces
     public interface IProductRepository
     {
         Task<IEnumerable<Product>> GetAllAsync();
+        Task<IEnumerable<Product>> GetAllForAdminAsync();
         Task<Product?> GetByIdAsync(int id);
         Task<Product> CreateAsync(Product product);
         Task<Product?> UpdateAsync(int id, Product product);

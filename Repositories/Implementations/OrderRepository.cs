@@ -29,7 +29,6 @@ namespace EcommerceAPI.Repositories.Implementations
         {
             return await _context.Orders
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
                 .Include(o => o.User)
                 .FirstOrDefaultAsync(o => o.Id == id);
         }
@@ -47,7 +46,6 @@ namespace EcommerceAPI.Repositories.Implementations
         {
             return await _context.Orders
                 .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.CreatedAt)
                 .ToListAsync();

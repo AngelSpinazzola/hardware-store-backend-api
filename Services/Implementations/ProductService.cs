@@ -204,7 +204,9 @@ namespace EcommerceAPI.Services.Implementations
             {
                 Id = id,
                 Name = updateProductDto.Name?.Trim() ?? existingProduct.Name,
-                Description = updateProductDto.Description?.Trim() ?? existingProduct.Description,
+                Description = string.IsNullOrWhiteSpace(updateProductDto.Description)
+                    ? null
+                    : updateProductDto.Description.Trim(),
                 Price = updateProductDto.Price ?? existingProduct.Price,
                 Stock = updateProductDto.Stock ?? existingProduct.Stock,
                 Category = updateProductDto.Category?.Trim() ?? existingProduct.Category,

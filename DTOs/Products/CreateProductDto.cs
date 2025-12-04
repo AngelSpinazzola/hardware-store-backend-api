@@ -9,7 +9,7 @@ namespace EcommerceAPI.DTOs.Products
         public string Name { get; set; }
 
         [StringLength(1000)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required]
         [Range(0.01, 20000000.00)]

@@ -34,6 +34,7 @@ namespace EcommerceAPI.Models
         public string? PaymentReceiptUrl { get; set; }
         public DateTime? PaymentReceiptUploadedAt { get; set; }
         public DateTime? PaymentApprovedAt { get; set; }
+        public DateTime? PaymentSubmittedAt { get; set; }
         public DateTime? ShippedAt { get; set; }
         public DateTime? DeliveredAt { get; set; }
         public string? AdminNotes { get; set; }

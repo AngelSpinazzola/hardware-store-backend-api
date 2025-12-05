@@ -297,6 +297,7 @@ namespace EcommerceAPI.Services.Implementations
                 // Actualiza la orden
                 order.PaymentReceiptUrl = receiptUrl;
                 order.PaymentReceiptUploadedAt = DateTime.UtcNow;
+                order.PaymentSubmittedAt = DateTime.UtcNow;
                 order.Status = OrderStatus.PaymentSubmitted;
                 order.UpdatedAt = DateTime.UtcNow;
 
@@ -526,6 +527,7 @@ namespace EcommerceAPI.Services.Implementations
                 PaymentMethod = order.PaymentMethod,
                 PaymentReceiptUrl = order.PaymentReceiptUrl,
                 PaymentReceiptUploadedAt = order.PaymentReceiptUploadedAt,
+                PaymentSubmittedAt = order.PaymentSubmittedAt,
                 PaymentApprovedAt = order.PaymentApprovedAt,
                 ShippedAt = order.ShippedAt,
                 DeliveredAt = order.DeliveredAt,

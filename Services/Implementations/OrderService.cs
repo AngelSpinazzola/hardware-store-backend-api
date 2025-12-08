@@ -80,7 +80,7 @@ namespace EcommerceAPI.Services.Implementations
                     throw new ArgumentException($"Stock insuficiente para {product.Name}. Disponible: {product.Stock}, Solicitado: {item.Quantity}");
                 }
 
-                if (!product.IsActive)
+                if (product.Status != ProductStatus.Active)
                 {
                     Log.Warning("Inactive product in order: ProductId={ProductId}", item.ProductId);
                     throw new ArgumentException($"El producto {product.Name} no está disponible");

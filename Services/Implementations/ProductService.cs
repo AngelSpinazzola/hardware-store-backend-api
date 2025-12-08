@@ -38,7 +38,7 @@ namespace EcommerceAPI.Services.Implementations
                 Model = p.Model,
                 Platform = p.Platform,
                 MainImageUrl = p.MainImageUrl,
-                IsActive = p.IsActive
+                Status = p.Status
             });
         }
 
@@ -56,7 +56,7 @@ namespace EcommerceAPI.Services.Implementations
                 Model = p.Model,
                 Platform = p.Platform,
                 MainImageUrl = p.MainImageUrl,
-                IsActive = p.IsActive
+                Status = p.Status
             });
         }
 
@@ -80,7 +80,8 @@ namespace EcommerceAPI.Services.Implementations
                 Model = product.Model,
                 Platform = product.Platform,
                 MainImageUrl = product.MainImageUrl,
-                IsActive = product.IsActive,
+                Status = product.Status,      
+                DeletedAt = product.DeletedAt,
                 CreatedAt = product.CreatedAt,
                 UpdatedAt = product.UpdatedAt,
                 Images = images.Select(img => new ProductImageDto
@@ -108,7 +109,7 @@ namespace EcommerceAPI.Services.Implementations
                 Model = createProductDto.Model?.Trim() ?? string.Empty,
                 Platform = createProductDto.Platform?.Trim(),
                 MainImageUrl = DEFAULT_PLACEHOLDER,
-                IsActive = true
+                Status = ProductStatus.Active
             };
 
             var createdProduct = await _productRepository.CreateAsync(product);
@@ -179,7 +180,8 @@ namespace EcommerceAPI.Services.Implementations
                 Brand = createdProduct.Brand,
                 Model = createdProduct.Model,
                 MainImageUrl = createdProduct.MainImageUrl,
-                IsActive = createdProduct.IsActive,
+                Status = createdProduct.Status,       
+                DeletedAt = createdProduct.DeletedAt,
                 CreatedAt = createdProduct.CreatedAt,
                 UpdatedAt = createdProduct.UpdatedAt,
                 Images = productImages.Select(img => new ProductImageDto
@@ -213,7 +215,7 @@ namespace EcommerceAPI.Services.Implementations
                 Brand = updateProductDto.Brand?.Trim() ?? existingProduct.Brand,
                 Model = updateProductDto.Model?.Trim() ?? existingProduct.Model,
                 Platform = updateProductDto.Platform?.Trim() ?? existingProduct.Platform,
-                IsActive = updateProductDto.IsActive ?? existingProduct.IsActive,
+                Status = updateProductDto.Status ?? existingProduct.Status,
                 MainImageUrl = existingProduct.MainImageUrl,
                 CreatedAt = existingProduct.CreatedAt,
                 UpdatedAt = DateTime.UtcNow
@@ -296,7 +298,8 @@ namespace EcommerceAPI.Services.Implementations
                 Brand = updatedProduct.Brand,
                 Model = updatedProduct.Model,
                 MainImageUrl = updatedProduct.MainImageUrl,
-                IsActive = updatedProduct.IsActive,
+                Status = updatedProduct.Status,       
+                DeletedAt = updatedProduct.DeletedAt,
                 CreatedAt = updatedProduct.CreatedAt,
                 UpdatedAt = updatedProduct.UpdatedAt,
                 Images = images.Select(img => new ProductImageDto
@@ -343,7 +346,7 @@ namespace EcommerceAPI.Services.Implementations
                 Brand = p.Brand,
                 Model = p.Model,
                 MainImageUrl = p.MainImageUrl,
-                IsActive = p.IsActive
+                Status = p.Status
             });
         }
 
@@ -360,7 +363,7 @@ namespace EcommerceAPI.Services.Implementations
                 Brand = p.Brand,
                 Model = p.Model,
                 MainImageUrl = p.MainImageUrl,
-                IsActive = p.IsActive
+                Status = p.Status
             });
         }
 
@@ -377,7 +380,7 @@ namespace EcommerceAPI.Services.Implementations
                 Brand = p.Brand,
                 Model = p.Model,
                 MainImageUrl = p.MainImageUrl,
-                IsActive = p.IsActive
+                Status = p.Status
             });
         }
 
@@ -409,7 +412,7 @@ namespace EcommerceAPI.Services.Implementations
                 Brand = p.Brand,
                 Model = p.Model,
                 MainImageUrl = p.MainImageUrl,
-                IsActive = p.IsActive
+                Status = p.Status
             });
         }
 

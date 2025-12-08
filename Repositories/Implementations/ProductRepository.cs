@@ -17,7 +17,7 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
             return await _context.Products
-                .Where(p => p.IsActive)
+                .Where(p => p.Status == ProductStatus.Active)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
@@ -25,7 +25,8 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<IEnumerable<Product>> GetAllForAdminAsync()
         {
             return await _context.Products
-                .AsNoTracking()  
+                .AsNoTracking()
+                .Where(p => p.Status != ProductStatus.Deleted)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
@@ -33,7 +34,7 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<Product?> GetByIdAsync(int id)
         {
             return await _context.Products
-                .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
+                .FirstOrDefaultAsync(p => p.Id == id && p.Status != ProductStatus.Deleted);
         }
 
         public async Task<Product> CreateAsync(Product product)
@@ -60,7 +61,7 @@ namespace EcommerceAPI.Repositories.Implementations
             existingProduct.Model = product.Model;
             existingProduct.Platform = product.Platform;
             existingProduct.MainImageUrl = product.MainImageUrl;
-            existingProduct.IsActive = product.IsActive;
+            existingProduct.Status = product.Status;
             existingProduct.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -74,7 +75,8 @@ namespace EcommerceAPI.Repositories.Implementations
                 return false;
 
             // Soft delete - solo marca como inactivo
-            product.IsActive = false;
+            product.Status = ProductStatus.Deleted; 
+            product.DeletedAt = DateTime.UtcNow;
             product.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -84,7 +86,7 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<IEnumerable<Product>> GetByCategoryAsync(string category)
         {
             return await _context.Products
-                .Where(p => p.IsActive && p.Category.ToLower() == category.ToLower())
+                .Where(p => p.Status == ProductStatus.Active && p.Category.ToLower() == category.ToLower())
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
@@ -93,7 +95,7 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<IEnumerable<Product>> GetByBrandAsync(string brand)
         {
             return await _context.Products
-                .Where(p => p.IsActive && p.Brand.ToLower() == brand.ToLower())
+                .Where(p => p.Status == ProductStatus.Active && p.Brand.ToLower() == brand.ToLower())
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
@@ -103,7 +105,7 @@ namespace EcommerceAPI.Repositories.Implementations
             var normalizedTerm = searchTerm.ToLower().Trim();
 
             return await _context.Products
-                .Where(p => p.IsActive &&
+                .Where(p => p.Status == ProductStatus.Active &&
                        (
                            p.Name.ToLower().Contains(normalizedTerm) ||
                            p.Brand.ToLower().Contains(normalizedTerm) ||
@@ -123,7 +125,7 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<IEnumerable<string>> GetCategoriesAsync()
         {
             return await _context.Products
-                .Where(p => p.IsActive && !string.IsNullOrEmpty(p.Category))
+                .Where(p => p.Status == ProductStatus.Active && !string.IsNullOrEmpty(p.Category))
                 .Select(p => p.Category)
                 .Distinct()
                 .OrderBy(c => c)
@@ -133,7 +135,7 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<IEnumerable<string>> GetBrandsAsync()
         {
             return await _context.Products
-                .Where(p => p.IsActive && !string.IsNullOrEmpty(p.Brand))
+                .Where(p => p.Status == ProductStatus.Active && !string.IsNullOrEmpty(p.Brand))
                 .Select(p => p.Brand)
                 .Distinct()
                 .OrderBy(b => b)
@@ -148,7 +150,7 @@ namespace EcommerceAPI.Repositories.Implementations
             decimal? maxPrice = null,
             bool? inStock = null)
         {
-            var query = _context.Products.Where(p => p.IsActive);
+            var query = _context.Products.Where(p => p.Status == ProductStatus.Active);
 
             // Filtra por categoría
             if (!string.IsNullOrEmpty(category))
@@ -196,7 +198,7 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<Dictionary<string, Dictionary<string, List<string>>>> GetMenuStructureAsync()
         {
             var products = await _context.Products
-                .Where(p => p.IsActive)
+                .Where(p => p.Status == ProductStatus.Active)
                 .GroupBy(p => new { p.Category, p.Brand, p.Model })
                 .Select(g => new { g.Key.Category, g.Key.Brand, g.Key.Model, Count = g.Count() })
                 .ToListAsync();
@@ -232,7 +234,7 @@ namespace EcommerceAPI.Repositories.Implementations
         public async Task<object> GetProductStatsAsync()
         {
             var stats = await _context.Products
-                .Where(p => p.IsActive)
+                .Where(p => p.Status == ProductStatus.Active)
                 .GroupBy(p => p.Category)
                 .Select(g => new
                 {
@@ -249,14 +251,14 @@ namespace EcommerceAPI.Repositories.Implementations
 
             var totalStats = new
             {
-                TotalProducts = await _context.Products.CountAsync(p => p.IsActive),
+                TotalProducts = await _context.Products.CountAsync(p => p.Status == ProductStatus.Active),
                 TotalCategories = await _context.Products
-                    .Where(p => p.IsActive)
+                    .Where(p => p.Status == ProductStatus.Active)
                     .Select(p => p.Category)
                     .Distinct()
                     .CountAsync(),
                 TotalBrands = await _context.Products
-                    .Where(p => p.IsActive)
+                    .Where(p => p.Status == ProductStatus.Active)
                     .Select(p => p.Brand)
                     .Distinct()
                     .CountAsync(),

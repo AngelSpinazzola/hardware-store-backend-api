@@ -1,4 +1,6 @@
-﻿namespace EcommerceAPI.DTOs.Products
+﻿using EcommerceAPI.Models;
+
+namespace EcommerceAPI.DTOs.Products
 {
     public class ProductListDto
     {
@@ -11,6 +13,6 @@
         public string Model { get; set; }
         public string? Platform { get; set; }
         public string MainImageUrl { get; set; }
-        public bool IsActive { get; set; }
+        public ProductStatus Status { get; set; }
     }
 }

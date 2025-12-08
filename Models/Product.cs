@@ -14,9 +14,10 @@ namespace EcommerceAPI.Models
         public string Model { get; set; }           
         public string MainImageUrl { get; set; }
         public string? Platform { get; set; }
-        public bool IsActive { get; set; } = true;
+        public ProductStatus Status { get; set; } = ProductStatus.Active;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? DeletedAt { get; set; }
         public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
     }
 }

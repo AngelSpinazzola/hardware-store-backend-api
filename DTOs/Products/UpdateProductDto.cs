@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using EcommerceAPI.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace EcommerceAPI.DTOs.Products
 {
@@ -30,6 +31,6 @@ namespace EcommerceAPI.DTOs.Products
 
         public IFormFile[]? ImageFiles { get; set; }
         public string[]? ImageUrls { get; set; }
-        public bool? IsActive { get; set; }
+        public ProductStatus? Status { get; set; }
     }
 }

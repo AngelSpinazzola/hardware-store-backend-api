@@ -51,9 +51,15 @@ namespace EcommerceAPI.Data
                 entity.Property(e => e.Model).HasMaxLength(100);
                 entity.Property(e => e.Platform).HasMaxLength(50);
                 entity.Property(e => e.MainImageUrl).HasMaxLength(500);
-                entity.Property(e => e.IsActive).HasDefaultValue(true);
+                entity.Property(e => e.Status)
+                    .HasConversion<int>()
+                    .HasDefaultValue(ProductStatus.Active);
+
+                entity.Property(e => e.DeletedAt).IsRequired(false); 
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
                 entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(e => e.Status);
             });
 
             // CONFIGURACIÓN DE PRODUCTIMAGE

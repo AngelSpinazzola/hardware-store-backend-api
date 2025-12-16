@@ -7,20 +7,29 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copia archivo de proyecto y restaura dependencias
-COPY ["EcommerceAPI.csproj", "./"]
-RUN dotnet restore "EcommerceAPI.csproj"
+# Copia la solución y los archivos de proyecto
+COPY ["EcommerceAPI.sln", "./"]
+COPY ["src/HardwareStore.Domain/HardwareStore.Domain.csproj", "src/HardwareStore.Domain/"]
+COPY ["src/HardwareStore.Application/HardwareStore.Application.csproj", "src/HardwareStore.Application/"]
+COPY ["src/HardwareStore.Infrastructure/HardwareStore.Infrastructure.csproj", "src/HardwareStore.Infrastructure/"]
+COPY ["src/HardwareStore.API/HardwareStore.API.csproj", "src/HardwareStore.API/"]
 
-# Copia el resto de archivos y construye
+# Restaura dependencias
+RUN dotnet restore "EcommerceAPI.sln"
+
+# Copia el resto del código
 COPY . .
-RUN dotnet build "EcommerceAPI.csproj" -c Release -o /app/build
 
-# Publica la aplicaci�n
+# Build del proyecto
+WORKDIR "/src/src/HardwareStore.API"
+RUN dotnet build "HardwareStore.API.csproj" -c Release -o /app/build
+
+# Publica la aplicación
 FROM build AS publish
-RUN dotnet publish "EcommerceAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "HardwareStore.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Imagen final
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "EcommerceAPI.dll"]
+ENTRYPOINT ["dotnet", "HardwareStore.API.dll"]

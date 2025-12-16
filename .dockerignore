@@ -22,7 +22,8 @@ Thumbs.db
 *.db
 *.sqlite
 
-# Archivos de configuración local
+# Archivos de configuraciï¿½n local 
+appsettings.json
 appsettings.Development.json
 appsettings.Local.json
 

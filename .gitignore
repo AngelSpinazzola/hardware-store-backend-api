@@ -22,6 +22,7 @@ appsettings.Production.json
 .idea/
 *.swp
 *.swo
+.claude/
 
 # OS Files
 .DS_Store
@@ -29,6 +30,7 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
 
 # Database local
 *.db
@@ -70,6 +72,6 @@ StyleCopReport.xml
 *.svclog
 *.scc
 
-# Archivos de prueba y configuración local
+# Archivos de prueba y configuraciï¿½n local
 *.http
 launchSettings.json

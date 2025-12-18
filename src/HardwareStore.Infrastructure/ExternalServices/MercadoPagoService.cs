@@ -49,28 +49,35 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 UnitPrice = item.UnitPrice
             }).ToList();
 
+            // Determina el teléfono a usar (prioriza AuthorizedPersonPhone)
+            var phoneNumber = !string.IsNullOrWhiteSpace(order.AuthorizedPersonPhone)
+                ? order.AuthorizedPersonPhone
+                : order.CustomerPhone ?? "";
+
             // Configura URLs de retorno
             var preferenceRequest = new PreferenceRequest
             {
-                ExternalReference = orderId.ToString(),  // Para identificar la orden en webhooks
+                ExternalReference = orderId.ToString(),
                 Items = items,
-                BackUrls = new PreferenceBackUrlsRequest
-                {
-                    Success = $"{backUrl}/success",
-                    Failure = $"{backUrl}/failure",
-                    Pending = $"{backUrl}/pending"
-                },
-                AutoReturn = "approved",  // Redirige automáticamente si se aprueba
-                NotificationUrl = _configuration["MercadoPago:WebhookUrl"],  // URL del webhook
                 Payer = new PreferencePayerRequest
                 {
                     Name = order.CustomerName,
                     Email = order.CustomerEmail,
                     Phone = new PhoneRequest
                     {
-                        Number = order.CustomerPhone
+                        AreaCode = "",
+                        Number = phoneNumber
                     }
-                }
+                },
+                BackUrls = new PreferenceBackUrlsRequest
+                {
+                    Success = $"{backUrl}/success?external_reference={orderId}",
+                    Failure = $"{backUrl}/failure?external_reference={orderId}",
+                    Pending = $"{backUrl}/pending?external_reference={orderId}"
+                },
+                StatementDescriptor = "HARDWARE_STORE",
+                BinaryMode = true,
+                NotificationUrl = _configuration["MercadoPago:WebhookUrl"]
             };
 
             // Crea la preferencia en MercadoPago

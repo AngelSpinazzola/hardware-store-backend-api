@@ -4,7 +4,6 @@ using HardwareStore.Application.Common;
 using HardwareStore.Infrastructure.Identity;
 using HardwareStore.Domain.Entities;
 using HardwareStore.Application.Common.Interfaces;
-using HardwareStore.Application.Common.Interfaces;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -117,6 +116,7 @@ namespace HardwareStore.API.Controllers
 
                 return Ok(new
                 {
+                    token = token,
                     user = userDto,
                     message = "Registro exitoso"
                 });
@@ -226,6 +226,7 @@ namespace HardwareStore.API.Controllers
 
                 return Ok(new
                 {
+                    token = token,
                     user = userDto,
                     message = "Login con Google exitoso"
                 });
@@ -335,6 +336,7 @@ namespace HardwareStore.API.Controllers
 
                 return Ok(new
                 {
+                    token = token,
                     user = userDto,
                     message = "Login exitoso"
                 });

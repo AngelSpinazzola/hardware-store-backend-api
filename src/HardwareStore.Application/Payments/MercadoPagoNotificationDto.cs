@@ -1,8 +1,6 @@
 namespace HardwareStore.Application.Payments
 {
-    /// <summary>
     /// DTO para recibir notificaciones IPN de MercadoPago via webhook
-    /// </summary>
     public class MercadoPagoNotificationDto
     {
         public string Action { get; set; }  // "payment.created", "payment.updated"

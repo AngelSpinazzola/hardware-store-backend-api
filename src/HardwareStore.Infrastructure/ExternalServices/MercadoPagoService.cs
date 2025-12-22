@@ -40,6 +40,12 @@ namespace HardwareStore.Infrastructure.ExternalServices
             if (order.Total <= 0)
                 throw new InvalidOperationException("El total de la orden debe ser mayor a 0");
 
+            // Protección: Límite de monto para demostración
+            if (order.Total > 500)
+                throw new InvalidOperationException(
+                    "Para demostración, el monto máximo permitido es ARS $500. " +
+                    "Este límite protege contra pagos accidentales.");
+
             // Crea items para MercadoPago
             var items = order.OrderItems.Select(item => new PreferenceItemRequest
             {

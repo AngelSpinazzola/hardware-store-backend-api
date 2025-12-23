@@ -37,12 +37,6 @@ namespace HardwareStore.Infrastructure.ExternalServices
         {
             // Valida datos de entrada usando SecurityHelper
             var sanitizedCustomerName = SecurityHelper.SanitizeInput(createOrderDto.CustomerName);
-            var emailValidation = SecurityHelper.ValidateAndSanitizeEmail(createOrderDto.CustomerEmail);
-
-            if (!emailValidation.IsValid)
-            {
-                throw new ArgumentException("Email inválido");
-            }
 
             if (string.IsNullOrEmpty(sanitizedCustomerName))
             {
@@ -117,7 +111,6 @@ namespace HardwareStore.Infrastructure.ExternalServices
             var order = new Order
             {
                 CustomerName = sanitizedCustomerName,
-                CustomerEmail = emailValidation.SanitizedEmail,
 
                 ShippingAddressId = createOrderDto.ShippingAddressId,
                 ShippingAddressType = shippingAddress.AddressType,
@@ -506,7 +499,6 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 UserId = order.UserId,
                 ShippingAddressId = order.ShippingAddressId,
                 CustomerName = order.CustomerName,
-                CustomerEmail = order.CustomerEmail,
 
                 // Información de dirección copiada para historial
                 ShippingAddressType = order.ShippingAddressType,
@@ -564,7 +556,6 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 Id = order.Id,
                 UserId = order.UserId,
                 CustomerName = order.CustomerName,
-                CustomerEmail = order.CustomerEmail,
                 Total = order.Total,
                 Status = order.Status,
                 StatusDescription = OrderStatus.GetStatusDescription(order.Status),

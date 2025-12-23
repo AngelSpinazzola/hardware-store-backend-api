@@ -2,10 +2,9 @@
 {
     public class OrderSummaryDto
     {
-        public int Id { get; set; }                   
-        public int? UserId { get; set; }             
+        public int Id { get; set; }
+        public int? UserId { get; set; }
         public string CustomerName { get; set; }
-        public string CustomerEmail { get; set; }
         public decimal Total { get; set; }
         public string Status { get; set; }
         public string StatusDescription { get; set; }

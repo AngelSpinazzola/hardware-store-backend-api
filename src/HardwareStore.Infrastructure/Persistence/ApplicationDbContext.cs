@@ -119,7 +119,6 @@ namespace HardwareStore.Infrastructure.Persistence
 
                 // Información del cliente
                 entity.Property(e => e.CustomerName).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.CustomerEmail).IsRequired().HasMaxLength(100);
 
                 // Dirección de envío (copiada para historial)
                 entity.Property(e => e.ShippingAddressType).HasMaxLength(50);
@@ -166,7 +165,6 @@ namespace HardwareStore.Infrastructure.Persistence
                 // Índices para optimizar consultas
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.CreatedAt);
-                entity.HasIndex(e => e.CustomerEmail);
             });
 
             // CONFIGURACIÓN DE ORDERITEM

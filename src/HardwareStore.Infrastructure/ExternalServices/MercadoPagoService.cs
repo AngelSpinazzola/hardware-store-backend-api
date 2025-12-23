@@ -67,7 +67,7 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 Payer = new PreferencePayerRequest
                 {
                     Name = order.CustomerName,
-                    Email = order.CustomerEmail,
+                    Email = order.User?.Email ?? "",
                     Phone = new PhoneRequest
                     {
                         AreaCode = "",

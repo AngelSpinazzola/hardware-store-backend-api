@@ -25,19 +25,19 @@
         public string AuthorizedPersonDni { get; set; }
         public decimal Total { get; set; }
         public string Status { get; set; } = "pending_payment";
-        public string PaymentMethod { get; set; } = "bank_transfer"; // "bank_transfer" o "mercadopago"
+        public string PaymentMethod { get; set; } = "bank_transfer";
 
-        // Para transferencias bancarias (método actual)
+        // Para transferencias bancarias
         public string? PaymentReceiptUrl { get; set; }
         public DateTime? PaymentReceiptUploadedAt { get; set; }
 
         // Para MercadoPago
-        public string? MercadoPagoPreferenceId { get; set; }  
-        public string? MercadoPagoPaymentId { get; set; }     
-        public string? MercadoPagoStatus { get; set; }     
-        public string? MercadoPagoPaymentType { get; set; }   
+        public string? MercadoPagoPreferenceId { get; set; }
+        public string? MercadoPagoPaymentId { get; set; }
+        public string? MercadoPagoStatus { get; set; }
+        public string? MercadoPagoPaymentType { get; set; }
 
-        // Comunes a ambos métodos
+        // Timestamps
         public DateTime? PaymentApprovedAt { get; set; }
         public DateTime? PaymentSubmittedAt { get; set; }
         public DateTime? ShippedAt { get; set; }
@@ -49,7 +49,7 @@
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public virtual User User { get; set; }
-        public virtual ShippingAddress ShippingAddress { get; set; }    
+        public virtual ShippingAddress ShippingAddress { get; set; }
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     }
 }

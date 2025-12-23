@@ -1,6 +1,7 @@
 using HardwareStore.Application.Common.Interfaces;
 using HardwareStore.Application.Payments;
 using HardwareStore.Domain.Interfaces;
+using HardwareStore.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using MercadoPago.Client.Preference;
 using MercadoPago.Client.Payment;
@@ -146,21 +147,21 @@ namespace HardwareStore.Infrastructure.ExternalServices
             switch (paymentInfo.Status?.ToLower())
             {
                 case "approved":
-                    order.Status = "paid";
+                    order.Status = OrderStatus.PaymentApproved;
                     order.PaymentApprovedAt = DateTime.UtcNow;
                     break;
                 case "pending":
                 case "in_process":
-                    order.Status = "pending_payment";
+                    order.Status = OrderStatus.PendingPayment;
                     order.PaymentSubmittedAt = DateTime.UtcNow;
                     break;
                 case "rejected":
                 case "cancelled":
-                    order.Status = "payment_failed";
+                    order.Status = OrderStatus.PaymentRejected;
                     break;
                 case "refunded":
                 case "charged_back":
-                    order.Status = "refunded";
+                    order.Status = OrderStatus.Cancelled;
                     break;
             }
 

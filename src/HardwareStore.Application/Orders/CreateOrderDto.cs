@@ -37,5 +37,9 @@ namespace HardwareStore.Application.Orders
 
         [Required]
         public List<CreateOrderItemDto> Items { get; set; } = new();
+
+        [Required]
+        [StringLength(20)]
+        public string PaymentMethod { get; set; } = "bank_transfer";
     }
 }

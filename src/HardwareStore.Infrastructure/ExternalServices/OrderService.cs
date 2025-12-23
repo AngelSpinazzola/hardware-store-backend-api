@@ -141,7 +141,10 @@ namespace HardwareStore.Infrastructure.ExternalServices
 
                 Total = total,
                 Status = OrderStatus.PendingPayment,
-                PaymentMethod = "bank_transfer",
+                PaymentMethod = OrderStatus.IsValidPaymentMethod(createOrderDto.PaymentMethod)
+                    ? createOrderDto.PaymentMethod
+                    : throw new ArgumentException("Método de pago no válido"),
+                ExpiresAt = DateTime.UtcNow.AddHours(24),
                 UserId = userId,
                 OrderItems = orderItems,
                 CreatedAt = DateTime.UtcNow,
@@ -631,6 +634,34 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 Log.Error(ex, "Error cancelling order: OrderId={OrderId}", orderId);
                 return false;
             }
+        }
+
+        public async Task<List<Order>> GetExpiredOrdersAsync()
+        {
+            var pendingOrders = await _orderRepository.GetByStatusAsync(OrderStatus.PendingPayment);
+            var rejectedOrders = await _orderRepository.GetByStatusAsync(OrderStatus.PaymentRejected);
+
+            var allPossiblyExpired = pendingOrders.Concat(rejectedOrders);
+
+            var now = DateTime.UtcNow;
+            var expiredOrders = allPossiblyExpired
+                .Where(o => o.ExpiresAt.HasValue && o.ExpiresAt < now)
+                .ToList();
+
+            return expiredOrders;
+        }
+
+        public async Task<int> CleanupExpiredOrdersAsync()
+        {
+            var expiredOrders = await GetExpiredOrdersAsync();
+
+            foreach (var order in expiredOrders)
+            {
+                await CancelOrderAsync(order.Id);
+                Log.Information("Auto-cancelled expired order: OrderId={OrderId}", order.Id);
+            }
+
+            return expiredOrders.Count;
         }
     }
 }

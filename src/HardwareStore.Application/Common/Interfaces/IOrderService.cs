@@ -20,5 +20,6 @@ namespace HardwareStore.Application.Common.Interfaces
         Task<string?> GetPaymentReceiptUrlAsync(int orderId);
         Task<bool> CanUserCancelOrderAsync(int orderId, int userId);
         Task<bool> CancelOrderAsync(int orderId);
+        Task<int> CleanupExpiredOrdersAsync();
     }
 }

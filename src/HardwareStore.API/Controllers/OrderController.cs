@@ -124,6 +124,9 @@ namespace HardwareStore.API.Controllers
                     return Forbid("No tienes permisos para ver todas las órdenes");
                 }
 
+                // Lazy cleanup: cancelar órdenes expiradas
+                await _orderService.CleanupExpiredOrdersAsync();
+
                 var orders = await _orderService.GetAllOrdersAsync();
 
                 var authContext = OrderAuthorizationHelper.GetAuthorizationContext(User, "GetAllOrders");
@@ -158,6 +161,9 @@ namespace HardwareStore.API.Controllers
                         User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
                     return BadRequest(new { message = "Usuario no válido" });
                 }
+
+                // Lazy cleanup: cancelar órdenes expiradas
+                await _orderService.CleanupExpiredOrdersAsync();
 
                 var orders = await _orderService.GetOrdersByUserIdAsync(userInfo.UserId);
                 return Ok(orders);
@@ -701,6 +707,41 @@ namespace HardwareStore.API.Controllers
             {
                 Log.Error(ex, "Order cancellation failed: OrderId={OrderId}", id);
                 return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        // Endpoint para limpieza automática de órdenes expiradas (GitHub Actions / Cron)
+        [HttpPost("cleanup-expired")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CleanupExpiredOrders(
+            [FromHeader(Name = "X-Cleanup-Key")] string cleanupKey)
+        {
+            var expectedKey = _configuration["CleanupApiKey"];
+
+            if (string.IsNullOrEmpty(cleanupKey) || cleanupKey != expectedKey)
+            {
+                Log.Warning("Unauthorized cleanup attempt from IP {IP}",
+                    HttpContext.Connection.RemoteIpAddress);
+                return Unauthorized(new { message = "Invalid API key" });
+            }
+
+            try
+            {
+                var count = await _orderService.CleanupExpiredOrdersAsync();
+
+                Log.Information("Cleanup completed: {Count} orders cancelled", count);
+
+                return Ok(new
+                {
+                    success = true,
+                    cancelledCount = count,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error during cleanup");
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
     }

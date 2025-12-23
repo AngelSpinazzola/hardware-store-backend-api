@@ -10,6 +10,10 @@
         public const string Delivered = "delivered";
         public const string Cancelled = "cancelled";
 
+        // Payment Methods
+        public const string PaymentMethodBankTransfer = "bank_transfer";
+        public const string PaymentMethodMercadoPago = "mercadopago";
+
         public static bool IsValidStatus(string status)
         {
             return status switch
@@ -33,6 +37,11 @@
                 Cancelled => "Cancelado",
                 _ => "Estado desconocido"
             };
+        }
+
+        public static bool IsValidPaymentMethod(string method)
+        {
+            return method is PaymentMethodBankTransfer or PaymentMethodMercadoPago;
         }
     }
 }

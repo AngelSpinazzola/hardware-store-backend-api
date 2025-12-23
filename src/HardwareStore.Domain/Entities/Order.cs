@@ -44,6 +44,7 @@
         public DateTime? PaymentSubmittedAt { get; set; }
         public DateTime? ShippedAt { get; set; }
         public DateTime? DeliveredAt { get; set; }
+        public DateTime? ExpiresAt { get; set; }
         public string? AdminNotes { get; set; }
         public string? TrackingNumber { get; set; }
         public string? ShippingProvider { get; set; }

@@ -1,0 +1,18 @@
+name: Cleanup Expired Orders
+
+on:
+  schedule:
+    # Ejecutar cada hora
+    - cron: '0 * * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call cleanup endpoint
+        run: |
+          curl -X POST https://ecommerce-api-production-50fd.up.railway.app/api/order/cleanup-expired \
+            -H "X-Cleanup-Key: ${{ secrets.CLEANUP_API_KEY }}" \
+            -H "Content-Type: application/json"

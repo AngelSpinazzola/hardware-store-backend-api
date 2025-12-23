@@ -7,7 +7,6 @@
         public int? ShippingAddressId { get; set; }   
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }
-        public string CustomerPhone { get; set; }
         public string ShippingAddressType { get; set; }
         public string ShippingStreet { get; set; }
         public string ShippingNumber { get; set; }

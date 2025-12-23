@@ -120,7 +120,6 @@ namespace HardwareStore.Infrastructure.Persistence
                 // Información del cliente
                 entity.Property(e => e.CustomerName).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.CustomerEmail).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.CustomerPhone).HasMaxLength(20);
 
                 // Dirección de envío (copiada para historial)
                 entity.Property(e => e.ShippingAddressType).HasMaxLength(50);

@@ -9,7 +9,6 @@
         // Información del cliente
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }
-        public string CustomerPhone { get; set; }
 
         // Dirección de envío (copiada para historial)
         public string ShippingAddressType { get; set; }

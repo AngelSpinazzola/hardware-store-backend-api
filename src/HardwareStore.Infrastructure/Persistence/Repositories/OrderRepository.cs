@@ -59,7 +59,6 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
 
             existingOrder.CustomerName = order.CustomerName;
             existingOrder.CustomerEmail = order.CustomerEmail;
-            existingOrder.CustomerPhone = order.CustomerPhone;
             existingOrder.ShippingAddressId = order.ShippingAddressId;
             existingOrder.ShippingStreet = order.ShippingStreet;
             existingOrder.ShippingNumber = order.ShippingNumber;

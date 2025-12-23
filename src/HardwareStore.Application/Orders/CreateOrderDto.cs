@@ -13,9 +13,6 @@ namespace HardwareStore.Application.Orders
         [EmailAddress]
         public string CustomerEmail { get; set; }
 
-        [StringLength(20)]
-        public string CustomerPhone { get; set; }
-
         [Required] // Siempre requerido - usuario debe estar registrado y tener dirección
         public int ShippingAddressId { get; set; }
 

@@ -56,10 +56,8 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 UnitPrice = item.UnitPrice
             }).ToList();
 
-            // Determina el teléfono a usar (prioriza AuthorizedPersonPhone)
-            var phoneNumber = !string.IsNullOrWhiteSpace(order.AuthorizedPersonPhone)
-                ? order.AuthorizedPersonPhone
-                : order.CustomerPhone ?? "";
+            // Usa el teléfono de la persona autorizada
+            var phoneNumber = order.AuthorizedPersonPhone ?? "";
 
             // Configura URLs de retorno
             var preferenceRequest = new PreferenceRequest

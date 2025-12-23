@@ -118,7 +118,6 @@ namespace HardwareStore.Infrastructure.ExternalServices
             {
                 CustomerName = sanitizedCustomerName,
                 CustomerEmail = emailValidation.SanitizedEmail,
-                CustomerPhone = SecurityHelper.SanitizeInput(createOrderDto.CustomerPhone),
 
                 ShippingAddressId = createOrderDto.ShippingAddressId,
                 ShippingAddressType = shippingAddress.AddressType,
@@ -508,7 +507,6 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 ShippingAddressId = order.ShippingAddressId,
                 CustomerName = order.CustomerName,
                 CustomerEmail = order.CustomerEmail,
-                CustomerPhone = order.CustomerPhone,
 
                 // Información de dirección copiada para historial
                 ShippingAddressType = order.ShippingAddressType,

@@ -10,6 +10,8 @@ using MercadoPago.Client.Common;
 using MercadoPago.Config;
 using MercadoPago.Resource.Preference;
 using MercadoPago.Resource.Payment;
+using Polly;
+using Polly.Retry;
 
 namespace HardwareStore.Infrastructure.ExternalServices
 {
@@ -19,6 +21,7 @@ namespace HardwareStore.Infrastructure.ExternalServices
         private readonly IConfiguration _configuration;
         private readonly ILogger<MercadoPagoService> _logger;
         private readonly string _accessToken;
+        private readonly ResiliencePipeline _retryPipeline;
 
         public MercadoPagoService(
             IOrderRepository orderRepository,
@@ -33,6 +36,24 @@ namespace HardwareStore.Infrastructure.ExternalServices
 
             // Configura el SDK de MercadoPago
             MercadoPagoConfig.AccessToken = _accessToken;
+
+            // Configura política de reintentos
+            _retryPipeline = new ResiliencePipelineBuilder()
+                .AddRetry(new RetryStrategyOptions
+                {
+                    MaxRetryAttempts = 3,
+                    Delay = TimeSpan.FromSeconds(1),
+                    BackoffType = DelayBackoffType.Exponential,
+                    OnRetry = args =>
+                    {
+                        _logger.LogWarning(
+                            "Reintento {Attempt} de llamada a MercadoPago API. Error: {Error}",
+                            args.AttemptNumber,
+                            args.Outcome.Exception?.Message);
+                        return ValueTask.CompletedTask;
+                    }
+                })
+                .Build();
         }
 
         public async Task<MercadoPagoPaymentResponseDto> CreatePaymentPreferenceAsync(int orderId, string backUrl)
@@ -89,9 +110,10 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 NotificationUrl = _configuration["MercadoPago:WebhookUrl"]
             };
 
-            // Crea la preferencia en MercadoPago
+            // Crea la preferencia en MercadoPago con retry logic
             var client = new PreferenceClient();
-            Preference preference = await client.CreateAsync(preferenceRequest);
+            Preference preference = await _retryPipeline.ExecuteAsync(async ct =>
+                await client.CreateAsync(preferenceRequest));
 
             // Actualiza la orden con el PreferenceId
             order.MercadoPagoPreferenceId = preference.Id;
@@ -110,7 +132,8 @@ namespace HardwareStore.Infrastructure.ExternalServices
         public async Task<MercadoPagoPaymentInfo> GetPaymentInfoAsync(string paymentId)
         {
             var client = new PaymentClient();
-            Payment payment = await client.GetAsync(Convert.ToInt64(paymentId));
+            Payment payment = await _retryPipeline.ExecuteAsync(async ct =>
+                await client.GetAsync(Convert.ToInt64(paymentId)));
 
             return new MercadoPagoPaymentInfo
             {

@@ -3,6 +3,7 @@ using HardwareStore.Application.Payments;
 using HardwareStore.Domain.Interfaces;
 using HardwareStore.Domain.Enums;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MercadoPago.Client.Preference;
 using MercadoPago.Client.Payment;
 using MercadoPago.Client.Common;
@@ -16,14 +17,17 @@ namespace HardwareStore.Infrastructure.ExternalServices
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<MercadoPagoService> _logger;
         private readonly string _accessToken;
 
         public MercadoPagoService(
             IOrderRepository orderRepository,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ILogger<MercadoPagoService> logger)
         {
             _orderRepository = orderRepository;
             _configuration = configuration;
+            _logger = logger;
             _accessToken = configuration["MercadoPago:AccessToken"]
                 ?? throw new InvalidOperationException("MercadoPago AccessToken no configurado");
 
@@ -134,6 +138,21 @@ namespace HardwareStore.Infrastructure.ExternalServices
             var order = await _orderRepository.GetByIdAsync(orderId);
             if (order == null)
                 return;
+
+            // Evitar procesar el mismo webhook múltiples veces
+            if (!string.IsNullOrEmpty(order.MercadoPagoPaymentId) &&
+                order.MercadoPagoPaymentId == paymentId &&
+                order.MercadoPagoStatus == paymentInfo.Status)
+            {
+                _logger.LogInformation(
+                    "Webhook duplicado ignorado: OrderId={OrderId}, PaymentId={PaymentId}",
+                    orderId, paymentId);
+                return;
+            }
+
+            _logger.LogInformation(
+                "Procesando pago: OrderId={OrderId}, PaymentId={PaymentId}, Status={Status}",
+                orderId, paymentId, paymentInfo.Status);
 
             // Actualiza la orden según el estado del pago
             order.MercadoPagoPaymentId = paymentInfo.Id;

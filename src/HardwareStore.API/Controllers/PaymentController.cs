@@ -51,13 +51,13 @@ namespace HardwareStore.API.Controllers
 
         /// Webhook para recibir notificaciones de MercadoPago (IPN)
         [HttpPost("mercadopago/webhook")]
-        [AllowAnonymous]  
+        [AllowAnonymous]
         public async Task<IActionResult> MercadoPagoWebhook([FromBody] MercadoPagoNotificationDto notification)
         {
             try
             {
                 _logger.LogInformation(
-                    "Recibida notificación de MercadoPago: Action={Action}, Type={Type}, PaymentId={PaymentId}",
+                    "Webhook MercadoPago recibido: Action={Action}, Type={Type}, PaymentId={PaymentId}",
                     notification.Action,
                     notification.Type,
                     notification.Data?.Id
@@ -66,11 +66,13 @@ namespace HardwareStore.API.Controllers
                 // Solo procesar notificaciones de pagos
                 if (notification.Type != "payment" || string.IsNullOrEmpty(notification.Data?.Id))
                 {
-                    _logger.LogWarning("Notificación ignorada: tipo no soportado o sin ID");
+                    _logger.LogWarning("Webhook ignorado: tipo={Type} no soportado o sin ID", notification.Type);
                     return Ok(); // MercadoPago espera 200 OK siempre
                 }
 
                 await _mercadoPagoService.ProcessWebhookNotificationAsync(notification.Data.Id);
+
+                _logger.LogInformation("Webhook procesado exitosamente: PaymentId={PaymentId}", notification.Data.Id);
 
                 return Ok();
             }

@@ -74,34 +74,33 @@ namespace HardwareStore.API.Controllers
                     return Ok(); // MercadoPago espera 200 OK siempre
                 }
 
-                // Validar firma del webhook
+                // Validar firma del webhook (OBLIGATORIO)
                 var secretKey = _configuration["MercadoPago:WebhookSecret"];
-                if (!string.IsNullOrEmpty(secretKey))
+                if (string.IsNullOrEmpty(secretKey))
                 {
-                    var xSignature = Request.Headers["x-signature"].ToString();
-                    var xRequestId = Request.Headers["x-request-id"].ToString();
-
-                    if (string.IsNullOrEmpty(xSignature) || string.IsNullOrEmpty(xRequestId))
-                    {
-                        _logger.LogWarning("Webhook rechazado: headers de firma ausentes");
-                        return Ok();
-                    }
-
-                    var validator = new MercadoPagoWebhookValidator(secretKey);
-                    if (!validator.ValidateSignature(xSignature, xRequestId, notification.Data.Id))
-                    {
-                        _logger.LogWarning(
-                            "Webhook rechazado: firma inválida. PaymentId={PaymentId}",
-                            notification.Data.Id);
-                        return Ok();
-                    }
-
-                    _logger.LogInformation("Firma de webhook validada correctamente");
+                    _logger.LogError("WebhookSecret no configurado. Rechazando webhook por seguridad.");
+                    return Unauthorized(new { message = "Webhook signature validation not configured" });
                 }
-                else
+
+                var xSignature = Request.Headers["x-signature"].ToString();
+                var xRequestId = Request.Headers["x-request-id"].ToString();
+
+                if (string.IsNullOrEmpty(xSignature) || string.IsNullOrEmpty(xRequestId))
                 {
-                    _logger.LogWarning("WebhookSecret no configurado, omitiendo validación de firma");
+                    _logger.LogWarning("Webhook rechazado: headers de firma ausentes");
+                    return Unauthorized(new { message = "Missing signature headers" });
                 }
+
+                var validator = new MercadoPagoWebhookValidator(secretKey);
+                if (!validator.ValidateSignature(xSignature, xRequestId, notification.Data.Id))
+                {
+                    _logger.LogWarning(
+                        "Webhook rechazado: firma inválida. PaymentId={PaymentId}",
+                        notification.Data.Id);
+                    return Unauthorized(new { message = "Invalid signature" });
+                }
+
+                _logger.LogInformation("Firma de webhook validada correctamente");
 
                 await _mercadoPagoService.ProcessWebhookNotificationAsync(notification.Data.Id);
 

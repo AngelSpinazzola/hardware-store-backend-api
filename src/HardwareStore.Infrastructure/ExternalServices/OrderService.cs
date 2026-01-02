@@ -10,7 +10,9 @@ using HardwareStore.Domain.Enums;
 using HardwareStore.Infrastructure.Persistence.Repositories;
 using HardwareStore.Domain.Interfaces;
 using HardwareStore.Application.Common.Interfaces;
+using HardwareStore.Infrastructure.Persistence;
 using Serilog;
+using Microsoft.EntityFrameworkCore;
 
 namespace HardwareStore.Infrastructure.ExternalServices
 {
@@ -20,17 +22,20 @@ namespace HardwareStore.Infrastructure.ExternalServices
         private readonly IProductRepository _productRepository;
         private readonly IFileService _fileService;
         private readonly IShippingAddressRepository _shippingAddressRepository;
+        private readonly ApplicationDbContext _context;
 
         public OrderService(
             IOrderRepository orderRepository,
             IProductRepository productRepository,
             IFileService fileService,
-            IShippingAddressRepository shippingAddressRepository)
+            IShippingAddressRepository shippingAddressRepository,
+            ApplicationDbContext context)
         {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
             _fileService = fileService;
             _shippingAddressRepository = shippingAddressRepository;
+            _context = context;
         }
 
         public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createOrderDto, int? userId = null)
@@ -48,123 +53,138 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 throw new ArgumentException("ID de dirección de envío inválido");
             }
 
-            // Valida que todos los productos existan y tengan stock suficiente
-            var orderItems = new List<OrderItem>();
-            decimal total = 0;
+            // Usar transacción para prevenir race conditions en stock
+            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
-            foreach (var item in createOrderDto.Items)
+            try
             {
-                // Valida ProductId
-                if (!SecurityHelper.IsValidId(item.ProductId))
+                // Valida que todos los productos existan y tengan stock suficiente
+                var orderItems = new List<OrderItem>();
+                decimal total = 0;
+
+                foreach (var item in createOrderDto.Items)
                 {
-                    throw new ArgumentException($"ID de producto inválido: {item.ProductId}");
+                    // Valida ProductId
+                    if (!SecurityHelper.IsValidId(item.ProductId))
+                    {
+                        throw new ArgumentException($"ID de producto inválido: {item.ProductId}");
+                    }
+
+                    if (item.Quantity <= 0)
+                    {
+                        throw new ArgumentException($"Cantidad inválida para producto {item.ProductId}");
+                    }
+
+                    var product = await _productRepository.GetByIdAsync(item.ProductId);
+                    if (product == null)
+                    {
+                        Log.Warning("Product not found during order creation: ProductId={ProductId}", item.ProductId);
+                        throw new ArgumentException($"Producto con ID {item.ProductId} no encontrado");
+                    }
+
+                    if (product.Stock < item.Quantity)
+                    {
+                        Log.Warning("Insufficient stock: ProductId={ProductId}, Available={Available}, Requested={Requested}",
+                            item.ProductId, product.Stock, item.Quantity);
+                        throw new ArgumentException($"Stock insuficiente para {product.Name}. Disponible: {product.Stock}, Solicitado: {item.Quantity}");
+                    }
+
+                    if (product.Status != ProductStatus.Active)
+                    {
+                        Log.Warning("Inactive product in order: ProductId={ProductId}", item.ProductId);
+                        throw new ArgumentException($"El producto {product.Name} no está disponible");
+                    }
+
+                    var subtotal = product.Price * item.Quantity;
+                    total += subtotal;
+
+                    orderItems.Add(new OrderItem
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = product.Price,
+                        Subtotal = subtotal,
+                        ProductName = product.Name,
+                        ProductImageUrl = product.MainImageUrl,
+                        ProductBrand = product.Brand,      // Brand para historial
+                        ProductModel = product.Model       // Model para historial
+                    });
                 }
 
-                if (item.Quantity <= 0)
+                var shippingAddress = await _shippingAddressRepository.GetByIdAsync(createOrderDto.ShippingAddressId);
+                if (shippingAddress == null)
                 {
-                    throw new ArgumentException($"Cantidad inválida para producto {item.ProductId}");
+                    throw new ArgumentException("Dirección de envío no encontrada");
                 }
 
-                var product = await _productRepository.GetByIdAsync(item.ProductId);
-                if (product == null)
+                // Crea la orden
+                var order = new Order
                 {
-                    Log.Warning("Product not found during order creation: ProductId={ProductId}", item.ProductId);
-                    throw new ArgumentException($"Producto con ID {item.ProductId} no encontrado");
+                    CustomerName = sanitizedCustomerName,
+
+                    ShippingAddressId = createOrderDto.ShippingAddressId,
+                    ShippingAddressType = shippingAddress.AddressType,
+                    ShippingStreet = shippingAddress.Street,
+                    ShippingNumber = shippingAddress.Number,
+                    ShippingFloor = shippingAddress.Floor,
+                    ShippingApartment = shippingAddress.Apartment,
+                    ShippingTower = shippingAddress.Tower,
+                    ShippingBetweenStreets = shippingAddress.BetweenStreets,
+                    ShippingPostalCode = shippingAddress.PostalCode,
+                    ShippingProvince = shippingAddress.Province,
+                    ShippingCity = shippingAddress.City,
+                    ShippingObservations = shippingAddress.Observations,
+
+                    // Datos del receptor
+                    AuthorizedPersonFirstName = SecurityHelper.SanitizeInput(createOrderDto.ReceiverFirstName),
+                    AuthorizedPersonLastName = SecurityHelper.SanitizeInput(createOrderDto.ReceiverLastName),
+                    AuthorizedPersonPhone = SecurityHelper.SanitizeInput(createOrderDto.ReceiverPhone),
+                    AuthorizedPersonDni = SecurityHelper.SanitizeInput(createOrderDto.ReceiverDni),
+
+                    Total = total,
+                    Status = OrderStatus.PendingPayment,
+                    PaymentMethod = OrderStatus.IsValidPaymentMethod(createOrderDto.PaymentMethod)
+                        ? createOrderDto.PaymentMethod
+                        : throw new ArgumentException("Método de pago no válido"),
+                    ExpiresAt = DateTime.UtcNow.AddHours(24),
+                    UserId = userId,
+                    OrderItems = orderItems,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                var createdOrder = await _orderRepository.CreateAsync(order);
+
+                // Descuenta stock de los productos
+                foreach (var item in createOrderDto.Items)
+                {
+                    var product = await _productRepository.GetByIdAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.Stock -= item.Quantity;
+                        product.UpdatedAt = DateTime.UtcNow;
+                        await _productRepository.UpdateAsync(product.Id, product);
+
+                        Log.Information("Stock updated: ProductId={ProductId}, NewStock={NewStock}",
+                            product.Id, product.Stock);
+                    }
                 }
 
-                if (product.Stock < item.Quantity)
-                {
-                    Log.Warning("Insufficient stock: ProductId={ProductId}, Available={Available}, Requested={Requested}",
-                        item.ProductId, product.Stock, item.Quantity);
-                    throw new ArgumentException($"Stock insuficiente para {product.Name}. Disponible: {product.Stock}, Solicitado: {item.Quantity}");
-                }
+                Log.Information("Order created successfully: OrderId={OrderId}, Total={Total}, ItemsCount={ItemsCount}",
+                    createdOrder.Id, total, orderItems.Count);
 
-                if (product.Status != ProductStatus.Active)
-                {
-                    Log.Warning("Inactive product in order: ProductId={ProductId}", item.ProductId);
-                    throw new ArgumentException($"El producto {product.Name} no está disponible");
-                }
+                // Commit de la transacción - todos los cambios son atómicos
+                await transaction.CommitAsync();
 
-                var subtotal = product.Price * item.Quantity;
-                total += subtotal;
-
-                orderItems.Add(new OrderItem
-                {
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitPrice = product.Price,
-                    Subtotal = subtotal,
-                    ProductName = product.Name,
-                    ProductImageUrl = product.MainImageUrl,
-                    ProductBrand = product.Brand,      // Brand para historial
-                    ProductModel = product.Model       // Model para historial
-                });
+                var finalOrder = await _orderRepository.GetByIdAsync(createdOrder.Id);
+                return MapToOrderDto(finalOrder!);
             }
-
-            var shippingAddress = await _shippingAddressRepository.GetByIdAsync(createOrderDto.ShippingAddressId);
-            if (shippingAddress == null)
+            catch (Exception ex)
             {
-                throw new ArgumentException("Dirección de envío no encontrada");
+                // Rollback automático al hacer dispose de la transacción
+                Log.Error(ex, "Error al crear orden. Se realizó rollback de la transacción.");
+                throw;
             }
-
-            // Crea la orden
-            var order = new Order
-            {
-                CustomerName = sanitizedCustomerName,
-
-                ShippingAddressId = createOrderDto.ShippingAddressId,
-                ShippingAddressType = shippingAddress.AddressType,
-                ShippingStreet = shippingAddress.Street,
-                ShippingNumber = shippingAddress.Number,
-                ShippingFloor = shippingAddress.Floor,
-                ShippingApartment = shippingAddress.Apartment,
-                ShippingTower = shippingAddress.Tower,
-                ShippingBetweenStreets = shippingAddress.BetweenStreets,
-                ShippingPostalCode = shippingAddress.PostalCode,
-                ShippingProvince = shippingAddress.Province,
-                ShippingCity = shippingAddress.City,
-                ShippingObservations = shippingAddress.Observations,
-
-                // Datos del receptor
-                AuthorizedPersonFirstName = SecurityHelper.SanitizeInput(createOrderDto.ReceiverFirstName),
-                AuthorizedPersonLastName = SecurityHelper.SanitizeInput(createOrderDto.ReceiverLastName),
-                AuthorizedPersonPhone = SecurityHelper.SanitizeInput(createOrderDto.ReceiverPhone),
-                AuthorizedPersonDni = SecurityHelper.SanitizeInput(createOrderDto.ReceiverDni),
-
-                Total = total,
-                Status = OrderStatus.PendingPayment,
-                PaymentMethod = OrderStatus.IsValidPaymentMethod(createOrderDto.PaymentMethod)
-                    ? createOrderDto.PaymentMethod
-                    : throw new ArgumentException("Método de pago no válido"),
-                ExpiresAt = DateTime.UtcNow.AddHours(24),
-                UserId = userId,
-                OrderItems = orderItems,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            var createdOrder = await _orderRepository.CreateAsync(order);
-
-            // Descuenta stock de los productos
-            foreach (var item in createOrderDto.Items)
-            {
-                var product = await _productRepository.GetByIdAsync(item.ProductId);
-                if (product != null)
-                {
-                    product.Stock -= item.Quantity;
-                    product.UpdatedAt = DateTime.UtcNow;
-                    await _productRepository.UpdateAsync(product.Id, product);
-
-                    Log.Information("Stock updated: ProductId={ProductId}, NewStock={NewStock}",
-                        product.Id, product.Stock);
-                }
-            }
-
-            Log.Information("Order created successfully: OrderId={OrderId}, Total={Total}, ItemsCount={ItemsCount}",
-                createdOrder.Id, total, orderItems.Count);
-
-            var finalOrder = await _orderRepository.GetByIdAsync(createdOrder.Id);
-            return MapToOrderDto(finalOrder!);
         }
 
         public async Task<OrderDto?> GetOrderByIdAsync(int id)

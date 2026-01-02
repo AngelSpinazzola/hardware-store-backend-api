@@ -23,6 +23,7 @@ namespace HardwareStore.API.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createOrderDto)
         {

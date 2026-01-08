@@ -2,9 +2,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using HardwareStore.Application.Customers;
 using Microsoft.AspNetCore.Http;
-﻿using CloudinaryDotNet;
+using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using HardwareStore.Application.Common.Interfaces;
+using HardwareStore.Application.Common;
 
 namespace HardwareStore.Infrastructure.ExternalServices
 {

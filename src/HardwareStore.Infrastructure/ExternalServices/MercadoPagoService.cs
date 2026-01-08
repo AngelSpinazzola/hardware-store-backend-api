@@ -1,4 +1,3 @@
-using HardwareStore.Application.Common.Interfaces;
 using HardwareStore.Application.Payments;
 using HardwareStore.Domain.Interfaces;
 using HardwareStore.Domain.Enums;

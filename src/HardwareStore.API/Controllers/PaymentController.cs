@@ -1,4 +1,3 @@
-using HardwareStore.Application.Common.Interfaces;
 using HardwareStore.Application.Payments;
 using HardwareStore.Infrastructure.ExternalServices;
 using Microsoft.AspNetCore.Authorization;

@@ -1,6 +1,4 @@
-﻿using HardwareStore.Application.Customers;
-
-namespace HardwareStore.Application.Common.Interfaces
+namespace HardwareStore.Application.Customers
 {
     public interface IShippingAddressService
     {

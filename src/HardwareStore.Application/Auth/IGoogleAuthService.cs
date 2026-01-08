@@ -1,6 +1,6 @@
-﻿using Google.Apis.Auth;
+using Google.Apis.Auth;
 
-namespace HardwareStore.Application.Common.Interfaces
+namespace HardwareStore.Application.Auth
 {
     public interface IGoogleAuthService
     {

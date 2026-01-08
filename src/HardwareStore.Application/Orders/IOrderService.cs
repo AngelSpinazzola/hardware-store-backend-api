@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Http;
-using HardwareStore.Application.Orders;
 
-namespace HardwareStore.Application.Common.Interfaces
+namespace HardwareStore.Application.Orders
 {
     public interface IOrderService
     {

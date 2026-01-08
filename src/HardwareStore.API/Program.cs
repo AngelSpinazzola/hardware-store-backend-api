@@ -3,11 +3,18 @@ using HardwareStore.Infrastructure.Identity;
 using HardwareStore.Infrastructure.Persistence.Repositories;
 using HardwareStore.Domain.Interfaces;
 using HardwareStore.Infrastructure.ExternalServices;
-using HardwareStore.Application.Common.Interfaces;
+using HardwareStore.Application.Products;
+using HardwareStore.Application.Orders;
+using HardwareStore.Application.Customers;
+using HardwareStore.Application.Auth;
+using HardwareStore.Application.Payments;
+using HardwareStore.Application.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -53,7 +60,14 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddFluentValidation(config =>
+    {
+        // Registra todos los validators del assembly Application
+        config.RegisterValidatorsFromAssemblyContaining<CreateOrderDto>();
+        // Desactiva las validaciones de Data Annotations
+        config.DisableDataAnnotationsValidation = true;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

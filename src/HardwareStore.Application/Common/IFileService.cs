@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace HardwareStore.Application.Common.Interfaces
+namespace HardwareStore.Application.Common
 {
     public interface IFileService
     {

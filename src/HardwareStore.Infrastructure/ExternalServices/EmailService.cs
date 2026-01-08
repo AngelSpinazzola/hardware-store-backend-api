@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using HardwareStore.Application.Customers;
 using Microsoft.AspNetCore.Http;
-﻿using HardwareStore.Application.Common.Interfaces;
+using HardwareStore.Application.Common;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;

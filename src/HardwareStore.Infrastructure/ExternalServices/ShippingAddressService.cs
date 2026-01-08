@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http;
 using HardwareStore.Infrastructure.Identity;
 using HardwareStore.Domain.Entities;
 using HardwareStore.Domain.Interfaces;
-using HardwareStore.Application.Common.Interfaces;
 using Serilog;
 
 namespace HardwareStore.Infrastructure.ExternalServices

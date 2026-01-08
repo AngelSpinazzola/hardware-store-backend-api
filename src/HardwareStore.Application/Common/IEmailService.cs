@@ -1,4 +1,4 @@
-﻿namespace HardwareStore.Application.Common.Interfaces
+namespace HardwareStore.Application.Common
 {
     public interface IEmailService
     {

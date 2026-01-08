@@ -3,7 +3,6 @@ using HardwareStore.Application.Auth;
 using HardwareStore.Application.Common;
 using HardwareStore.Infrastructure.Identity;
 using HardwareStore.Domain.Entities;
-using HardwareStore.Application.Common.Interfaces;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

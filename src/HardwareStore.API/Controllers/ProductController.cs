@@ -1,6 +1,5 @@
 ﻿using HardwareStore.Application.Products;
 using HardwareStore.Infrastructure.Identity;
-using HardwareStore.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;

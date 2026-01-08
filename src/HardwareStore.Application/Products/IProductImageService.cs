@@ -1,6 +1,4 @@
-﻿using HardwareStore.Application.Products;
-
-namespace HardwareStore.Application.Common.Interfaces
+namespace HardwareStore.Application.Products
 {
     public interface IProductImageService
     {

@@ -2,12 +2,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using HardwareStore.Application.Customers;
 using Microsoft.AspNetCore.Http;
-﻿using HardwareStore.Application;
+using HardwareStore.Application;
 using HardwareStore.Application.Products;
 using HardwareStore.Domain.Entities;
 using HardwareStore.Domain.Enums;
 using HardwareStore.Domain.Interfaces;
-using HardwareStore.Application.Common.Interfaces;
+using HardwareStore.Application.Common;
 using Serilog;
 
 namespace HardwareStore.Infrastructure.ExternalServices

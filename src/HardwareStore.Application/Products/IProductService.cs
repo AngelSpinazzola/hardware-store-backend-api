@@ -1,7 +1,6 @@
-﻿using HardwareStore.Application.Products;
 using HardwareStore.Domain.Entities;
 
-namespace HardwareStore.Application.Common.Interfaces
+namespace HardwareStore.Application.Products
 {
     public interface IProductService
     {
@@ -17,10 +16,10 @@ namespace HardwareStore.Application.Common.Interfaces
         Task<IEnumerable<ProductListDto>> GetProductsByBrandAsync(string brand);
         Task<IEnumerable<string>> GetBrandsAsync();
         Task<IEnumerable<ProductListDto>> FilterProductsAsync(
-            string? category = null, 
-            string? brand = null, 
-            decimal? minPrice = null, 
-            decimal? maxPrice = null, 
+            string? category = null,
+            string? brand = null,
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
             bool? inStock = null);
         Task<object> GetProductMenuStructureAsync();
         Task<object> GetProductStatsAsync();

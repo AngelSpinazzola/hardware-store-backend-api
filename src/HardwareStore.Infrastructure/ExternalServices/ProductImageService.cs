@@ -2,11 +2,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using HardwareStore.Application.Customers;
 using Microsoft.AspNetCore.Http;
-﻿using HardwareStore.Infrastructure.Persistence;
+using HardwareStore.Infrastructure.Persistence;
 using HardwareStore.Application.Products;
 using HardwareStore.Domain.Entities;
 using HardwareStore.Domain.Interfaces;
-using HardwareStore.Application.Common.Interfaces;
+using HardwareStore.Application.Common;
 
 namespace HardwareStore.Infrastructure.ExternalServices
 {

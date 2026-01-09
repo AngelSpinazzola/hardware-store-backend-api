@@ -24,9 +24,9 @@ namespace HardwareStore.Application.Products
                 .NotNull().WithMessage("El stock es obligatorio")
                 .GreaterThanOrEqualTo(0).WithMessage("El stock no puede ser negativo");
 
-            RuleFor(x => x.Category)
+            RuleFor(x => x.CategoryId)
                 .NotEmpty().WithMessage("La categoría es obligatoria")
-                .MaximumLength(100).WithMessage("La categoría no puede tener más de 100 caracteres");
+                .GreaterThan(0).WithMessage("Debe seleccionar una categoría válida");
 
             RuleFor(x => x.Brand)
                 .NotEmpty().WithMessage("La marca es obligatoria")

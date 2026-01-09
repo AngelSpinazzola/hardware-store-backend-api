@@ -18,6 +18,7 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
             return await _context.Products
+                .Include(p => p.Category)
                 .Where(p => p.Status == ProductStatus.Active)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
@@ -26,6 +27,7 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<Product>> GetAllForAdminAsync()
         {
             return await _context.Products
+                .Include(p => p.Category)
                 .AsNoTracking()
                 .Where(p => p.Status != ProductStatus.Deleted)
                 .OrderByDescending(p => p.CreatedAt)
@@ -35,6 +37,7 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
         public async Task<Product?> GetByIdAsync(int id)
         {
             return await _context.Products
+                .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == id && p.Status != ProductStatus.Deleted);
         }
 
@@ -57,7 +60,7 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
             existingProduct.Description = product.Description;
             existingProduct.Price = product.Price;
             existingProduct.Stock = product.Stock;
-            existingProduct.Category = product.Category;
+            existingProduct.CategoryId = product.CategoryId;
             existingProduct.Brand = product.Brand;
             existingProduct.Model = product.Model;
             existingProduct.Platform = product.Platform;
@@ -66,7 +69,11 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
             existingProduct.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return existingProduct;
+
+            // Recargar con la navegación Category
+            return await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -87,7 +94,8 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<Product>> GetByCategoryAsync(string category)
         {
             return await _context.Products
-                .Where(p => p.Status == ProductStatus.Active && p.Category.ToLower() == category.ToLower())
+                .Include(p => p.Category)
+                .Where(p => p.Status == ProductStatus.Active && EF.Functions.Like(p.Category.Name, category))
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
@@ -96,28 +104,30 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<Product>> GetByBrandAsync(string brand)
         {
             return await _context.Products
-                .Where(p => p.Status == ProductStatus.Active && p.Brand.ToLower() == brand.ToLower())
+                .Include(p => p.Category)
+                .Where(p => p.Status == ProductStatus.Active && EF.Functions.Like(p.Brand, brand))
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Product>> SearchAsync(string searchTerm)
         {
-            var normalizedTerm = searchTerm.ToLower().Trim();
+            var normalizedTerm = searchTerm.Trim().ToLower();
 
             return await _context.Products
+                .Include(p => p.Category)
                 .Where(p => p.Status == ProductStatus.Active &&
                        (
-                           p.Name.ToLower().Contains(normalizedTerm) ||
-                           p.Brand.ToLower().Contains(normalizedTerm) ||
-                           p.Model.ToLower().Contains(normalizedTerm) ||
-                           p.Category.ToLower().Contains(normalizedTerm) ||
-                           (p.Description != null && p.Description.ToLower().Contains(normalizedTerm)) ||
+                           EF.Functions.Like(p.Name.ToLower(), $"%{normalizedTerm}%") ||
+                           EF.Functions.Like(p.Brand.ToLower(), $"%{normalizedTerm}%") ||
+                           EF.Functions.Like(p.Model.ToLower(), $"%{normalizedTerm}%") ||
+                           EF.Functions.Like(p.Category.Name.ToLower(), $"%{normalizedTerm}%") ||
+                           (p.Description != null && EF.Functions.Like(p.Description.ToLower(), $"%{normalizedTerm}%")) ||
 
                            // Solo patrones específicos más importantes
-                           p.Name.ToLower().StartsWith(normalizedTerm + "-") ||
-                           p.Name.ToLower().Contains(" " + normalizedTerm + " ") ||
-                           p.Name.ToLower().Contains(" " + normalizedTerm + "-")
+                           EF.Functions.Like(p.Name.ToLower(), $"{normalizedTerm}-%") ||
+                           EF.Functions.Like(p.Name.ToLower(), $"% {normalizedTerm} %") ||
+                           EF.Functions.Like(p.Name.ToLower(), $"% {normalizedTerm}-%")
                        ))
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
@@ -126,8 +136,9 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
         public async Task<IEnumerable<string>> GetCategoriesAsync()
         {
             return await _context.Products
-                .Where(p => p.Status == ProductStatus.Active && !string.IsNullOrEmpty(p.Category))
-                .Select(p => p.Category)
+                .Include(p => p.Category)
+                .Where(p => p.Status == ProductStatus.Active && p.Category != null)
+                .Select(p => p.Category.Name)
                 .Distinct()
                 .OrderBy(c => c)
                 .ToListAsync();
@@ -151,18 +162,20 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
             decimal? maxPrice = null,
             bool? inStock = null)
         {
-            var query = _context.Products.Where(p => p.Status == ProductStatus.Active);
+            var query = _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.Status == ProductStatus.Active);
 
             // Filtra por categoría
             if (!string.IsNullOrEmpty(category))
             {
-                query = query.Where(p => p.Category.ToLower() == category.ToLower());
+                query = query.Where(p => EF.Functions.Like(p.Category.Name, category));
             }
 
             // Filtra por marca
             if (!string.IsNullOrEmpty(brand))
             {
-                query = query.Where(p => p.Brand.ToLower() == brand.ToLower());
+                query = query.Where(p => EF.Functions.Like(p.Brand, brand));
             }
 
             // Filtra por precio mínimo
@@ -208,23 +221,25 @@ namespace HardwareStore.Infrastructure.Persistence.Repositories
 
             foreach (var product in products)
             {
+                var categoryName = product.Category.Name;
+
                 // Crea categoría si no existe
-                if (!structure.ContainsKey(product.Category))
+                if (!structure.ContainsKey(categoryName))
                 {
-                    structure[product.Category] = new Dictionary<string, List<string>>();
+                    structure[categoryName] = new Dictionary<string, List<string>>();
                 }
 
                 // Crea marca si no existe en la categoría
-                if (!structure[product.Category].ContainsKey(product.Brand))
+                if (!structure[categoryName].ContainsKey(product.Brand))
                 {
-                    structure[product.Category][product.Brand] = new List<string>();
+                    structure[categoryName][product.Brand] = new List<string>();
                 }
 
                 // Agrega modelo si no está vacío
                 if (!string.IsNullOrEmpty(product.Model) &&
-                    !structure[product.Category][product.Brand].Contains(product.Model))
+                    !structure[categoryName][product.Brand].Contains(product.Model))
                 {
-                    structure[product.Category][product.Brand].Add(product.Model);
+                    structure[categoryName][product.Brand].Add(product.Model);
                 }
             }
 

@@ -12,6 +12,7 @@ namespace HardwareStore.Infrastructure.Persistence
 
         public DbSet<User> Users { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<Category> Categories { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
@@ -39,6 +40,14 @@ namespace HardwareStore.Infrastructure.Persistence
                 entity.Property(e => e.AvatarUrl).HasMaxLength(500);
             });
 
+            // CONFIGURACIÓN DE CATEGORY
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.Name).IsUnique();
+            });
+
             // CONFIGURACIÓN DE PRODUCT
             modelBuilder.Entity<Product>(entity =>
             {
@@ -47,8 +56,7 @@ namespace HardwareStore.Infrastructure.Persistence
                 entity.Property(e => e.Description).HasMaxLength(1000);
                 entity.Property(e => e.Price).IsRequired().HasColumnType("decimal(10,2)");
                 entity.Property(e => e.Stock).HasDefaultValue(0);
-                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Brand).IsRequired().HasMaxLength(100); 
+                entity.Property(e => e.Brand).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Model).HasMaxLength(100);
                 entity.Property(e => e.Platform).HasMaxLength(50);
                 entity.Property(e => e.MainImageUrl).HasMaxLength(500);
@@ -56,11 +64,18 @@ namespace HardwareStore.Infrastructure.Persistence
                     .HasConversion<int>()
                     .HasDefaultValue(ProductStatus.Active);
 
-                entity.Property(e => e.DeletedAt).IsRequired(false); 
+                entity.Property(e => e.DeletedAt).IsRequired(false);
                 entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
                 entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
 
                 entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CategoryId);
+
+                // Relación con Category
+                entity.HasOne(e => e.Category)
+                      .WithMany()
+                      .HasForeignKey(e => e.CategoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
             // CONFIGURACIÓN DE PRODUCTIMAGE

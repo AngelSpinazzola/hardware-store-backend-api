@@ -24,9 +24,9 @@ namespace HardwareStore.Application.Products
                 .GreaterThanOrEqualTo(0).WithMessage("El stock no puede ser negativo")
                 .When(x => x.Stock.HasValue);
 
-            RuleFor(x => x.Category)
-                .MaximumLength(100).WithMessage("La categoría no puede tener más de 100 caracteres")
-                .When(x => x.Category != null);
+            RuleFor(x => x.CategoryId)
+                .GreaterThan(0).WithMessage("Debe seleccionar una categoría válida")
+                .When(x => x.CategoryId.HasValue);
 
             RuleFor(x => x.Brand)
                 .MaximumLength(100).WithMessage("La marca no puede tener más de 100 caracteres")

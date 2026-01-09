@@ -20,6 +20,17 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Fastest;
+});
+
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
@@ -41,7 +52,7 @@ builder.Services.AddRateLimiter(options =>
     });
     options.AddFixedWindowLimiter("search", options =>
     {
-        options.PermitLimit = 50; 
+        options.PermitLimit = 50;
         options.Window = TimeSpan.FromMinutes(1);
         options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         options.QueueLimit = 15;
@@ -168,9 +179,11 @@ builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
+app.UseResponseCompression();
+
 if (app.Environment.IsProduction())
 {
-    app.UseHttpsRedirection(); 
+    app.UseHttpsRedirection();
 }
 
 if (app.Environment.IsDevelopment())

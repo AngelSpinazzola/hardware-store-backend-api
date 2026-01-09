@@ -70,6 +70,7 @@ namespace HardwareStore.Infrastructure.Persistence
 
                 entity.HasIndex(e => e.Status);
                 entity.HasIndex(e => e.CategoryId);
+                entity.HasIndex(e => e.Name);
 
                 // Relación con Category
                 entity.HasOne(e => e.Category)

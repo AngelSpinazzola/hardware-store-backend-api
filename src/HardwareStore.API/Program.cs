@@ -184,7 +184,6 @@ builder.Services.AddHttpClient();
 var app = builder.Build();
 
 app.UseResponseCompression();
-app.UseResponseCaching();
 
 if (app.Environment.IsProduction())
 {
@@ -241,6 +240,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseCors("AllowReactApp");
+app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

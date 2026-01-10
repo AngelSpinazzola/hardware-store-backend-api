@@ -21,6 +21,7 @@ namespace HardwareStore.API.Controllers
 
         // Devuelve todos los productos con paginación
         [HttpGet]
+        [ResponseCache(Duration = 300, VaryByQueryKeys = new[] { "page", "pageSize" })]
         public async Task<IActionResult> GetAllProducts([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             try

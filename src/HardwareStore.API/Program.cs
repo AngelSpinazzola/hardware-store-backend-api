@@ -20,6 +20,10 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddMemoryCache();
+
+builder.Services.AddResponseCaching();
+
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
@@ -180,6 +184,7 @@ builder.Services.AddHttpClient();
 var app = builder.Build();
 
 app.UseResponseCompression();
+app.UseResponseCaching();
 
 if (app.Environment.IsProduction())
 {

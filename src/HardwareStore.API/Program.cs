@@ -17,6 +17,11 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text;
 using System.Threading.RateLimiting;
+using System.Globalization;
+
+// Configura cultura invariante para parseo de números (punto como decimal)
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
 

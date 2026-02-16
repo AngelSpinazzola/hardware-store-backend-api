@@ -18,6 +18,7 @@ using FluentValidation.AspNetCore;
 using System.Text;
 using System.Threading.RateLimiting;
 using System.Globalization;
+using HardwareStore.API.Middleware;
 
 // Configura cultura invariante para parseo de números (punto como decimal)
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -189,6 +190,8 @@ builder.Services.AddHttpClient();
 var app = builder.Build();
 
 app.UseResponseCompression();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsProduction())
 {

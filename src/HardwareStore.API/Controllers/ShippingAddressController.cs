@@ -1,4 +1,4 @@
-﻿using HardwareStore.Application.Customers;
+using HardwareStore.Application.Customers;
 using HardwareStore.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,158 +24,110 @@ namespace HardwareStore.API.Controllers
         [HttpGet("my-addresses")]
         public async Task<IActionResult> GetMyAddresses()
         {
-            try
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return BadRequest(new { message = "Usuario no válido" });
-                }
+                return BadRequest(new { message = "Usuario no válido" });
+            }
 
-                var addresses = await _shippingAddressService.GetAddressesByUserIdAsync(userId);
-                return Ok(addresses);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error retrieving user addresses for: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                return StatusCode(500, new { message = "Error interno del servidor" });
-            }
+            var addresses = await _shippingAddressService.GetAddressesByUserIdAsync(userId);
+            return Ok(addresses);
         }
 
         // Devuelve dirección por ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAddress(int id)
         {
-            try
+            if (!SecurityHelper.IsValidId(id))
             {
-                if (!SecurityHelper.IsValidId(id))
-                {
-                    return BadRequest(new { message = "ID de dirección inválido" });
-                }
-
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return BadRequest(new { message = "Usuario no válido" });
-                }
-
-                var address = await _shippingAddressService.GetAddressByIdAsync(id, userId);
-                if (address == null)
-                {
-                    return NotFound(new { message = "Dirección no encontrada" });
-                }
-
-                return Ok(address);
+                return BadRequest(new { message = "ID de dirección inválido" });
             }
-            catch (Exception ex)
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
             {
-                Log.Error(ex, "Error retrieving address: {AddressId}", id);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                return BadRequest(new { message = "Usuario no válido" });
             }
+
+            var address = await _shippingAddressService.GetAddressByIdAsync(id, userId);
+            if (address == null)
+            {
+                return NotFound(new { message = "Dirección no encontrada" });
+            }
+
+            return Ok(address);
         }
 
         [HttpPost]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> CreateAddress([FromBody] CreateShippingAddressDto createAddressDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+                return BadRequest(ModelState);
+            }
 
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return BadRequest(new { message = "Usuario no válido" });
-                }
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return BadRequest(new { message = "Usuario no válido" });
+            }
 
-                var address = await _shippingAddressService.CreateAddressAsync(createAddressDto, userId);
-                return CreatedAtAction(nameof(GetAddress), new { id = address.Id }, address);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error creating address for user: {UserId}", User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                return StatusCode(500, new { message = "Error interno del servidor" });
-            }
+            var address = await _shippingAddressService.CreateAddressAsync(createAddressDto, userId);
+            return CreatedAtAction(nameof(GetAddress), new { id = address.Id }, address);
         }
 
         [HttpPut("{id}")]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> UpdateAddress(int id, [FromBody] UpdateShippingAddressDto updateAddressDto)
         {
-            try
+            if (!SecurityHelper.IsValidId(id))
             {
-                if (!SecurityHelper.IsValidId(id))
-                {
-                    return BadRequest(new { message = "ID de dirección inválido" });
-                }
-
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return BadRequest(new { message = "Usuario no válido" });
-                }
-
-                var result = await _shippingAddressService.UpdateAddressAsync(id, updateAddressDto, userId);
-                if (!result)
-                {
-                    return NotFound(new { message = "Dirección no encontrada" });
-                }
-
-                return Ok(new { message = "Dirección actualizada correctamente" });
+                return BadRequest(new { message = "ID de dirección inválido" });
             }
-            catch (ArgumentException ex)
+
+            if (!ModelState.IsValid)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
             {
-                Log.Error(ex, "Error updating address: {AddressId}", id);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                return BadRequest(new { message = "Usuario no válido" });
             }
+
+            var result = await _shippingAddressService.UpdateAddressAsync(id, updateAddressDto, userId);
+            if (!result)
+            {
+                return NotFound(new { message = "Dirección no encontrada" });
+            }
+
+            return Ok(new { message = "Dirección actualizada correctamente" });
         }
 
         [HttpDelete("{id}")]
         [EnableRateLimiting("auth")]
         public async Task<IActionResult> DeleteAddress(int id)
         {
-            try
+            if (!SecurityHelper.IsValidId(id))
             {
-                if (!SecurityHelper.IsValidId(id))
-                {
-                    return BadRequest(new { message = "ID de dirección inválido" });
-                }
-
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!int.TryParse(userIdClaim, out int userId))
-                {
-                    return BadRequest(new { message = "Usuario no válido" });
-                }
-
-                var result = await _shippingAddressService.DeleteAddressAsync(id, userId);
-                if (!result)
-                {
-                    return NotFound(new { message = "Dirección no encontrada" });
-                }
-
-                return Ok(new { message = "Dirección eliminada correctamente" });
+                return BadRequest(new { message = "ID de dirección inválido" });
             }
-            catch (Exception ex)
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
             {
-                Log.Error(ex, "Error deleting address: {AddressId}", id);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                return BadRequest(new { message = "Usuario no válido" });
             }
+
+            var result = await _shippingAddressService.DeleteAddressAsync(id, userId);
+            if (!result)
+            {
+                return NotFound(new { message = "Dirección no encontrada" });
+            }
+
+            return Ok(new { message = "Dirección eliminada correctamente" });
         }
     }
 }

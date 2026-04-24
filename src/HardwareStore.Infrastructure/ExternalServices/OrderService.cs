@@ -547,6 +547,8 @@ namespace HardwareStore.Infrastructure.ExternalServices
                 PaymentReceiptUploadedAt = order.PaymentReceiptUploadedAt,
                 PaymentSubmittedAt = order.PaymentSubmittedAt,
                 PaymentApprovedAt = order.PaymentApprovedAt,
+                MercadoPagoStatus = order.MercadoPagoStatus,
+                MercadoPagoStatusDetail = order.MercadoPagoStatusDetail,
                 ShippedAt = order.ShippedAt,
                 DeliveredAt = order.DeliveredAt,
                 AdminNotes = order.AdminNotes,
@@ -567,6 +569,7 @@ namespace HardwareStore.Infrastructure.ExternalServices
                     ProductModel = oi.ProductModel    
                 }).ToList()
             };
+
         }
 
         private OrderSummaryDto MapToOrderSummaryDto(Order order)

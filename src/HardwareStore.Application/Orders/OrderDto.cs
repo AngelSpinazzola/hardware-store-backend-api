@@ -44,6 +44,8 @@
         public string? ShippingProvider { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string? MercadoPagoStatus { get; set; }
+        public string? MercadoPagoStatusDetail { get; set; }
 
         public List<OrderItemDto> OrderItems { get; set; } = new();
     }

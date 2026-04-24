@@ -179,6 +179,7 @@ namespace HardwareStore.Infrastructure.ExternalServices
             // Actualiza la orden según el estado del pago
             order.MercadoPagoPaymentId = paymentInfo.Id;
             order.MercadoPagoStatus = paymentInfo.Status;
+            order.MercadoPagoStatusDetail = paymentInfo.StatusDetail; 
             order.MercadoPagoPaymentType = paymentInfo.PaymentTypeId;
             order.UpdatedAt = DateTime.UtcNow;
 

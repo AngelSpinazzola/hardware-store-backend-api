@@ -35,6 +35,7 @@
         public string? MercadoPagoPreferenceId { get; set; }
         public string? MercadoPagoPaymentId { get; set; }
         public string? MercadoPagoStatus { get; set; }
+        public string? MercadoPagoStatusDetail { get; set; }
         public string? MercadoPagoPaymentType { get; set; }
 
         // Timestamps

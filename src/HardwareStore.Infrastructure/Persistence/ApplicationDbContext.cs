@@ -158,6 +158,7 @@ namespace HardwareStore.Infrastructure.Persistence
                 // Información de la orden
                 entity.Property(e => e.Total).IsRequired().HasColumnType("decimal(10,2)");
                 entity.Property(e => e.Status).IsRequired().HasMaxLength(30).HasDefaultValue("pending_payment");
+                entity.Property(e => e.MercadoPagoStatusDetail).HasMaxLength(100);
                 entity.Property(e => e.PaymentMethod).HasMaxLength(50).HasDefaultValue("bank_transfer");
                 entity.Property(e => e.PaymentReceiptUrl).HasMaxLength(500);
                 entity.Property(e => e.AdminNotes).HasMaxLength(1000);

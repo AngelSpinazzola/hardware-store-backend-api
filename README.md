@@ -52,6 +52,7 @@ API REST para e-commerce construida con **ASP.NET Core 9**, **Entity Framework C
 ### 💳 Pagos
 - Integración completa con **MercadoPago API** (creación de preferencias)
 - **Webhook IPN** con validación HMAC de firmas
+- **Reconciliación dual** — endpoint de sincronización manual (`/sync/{paymentId}`) como fallback defensivo: el frontend dispara la reconciliación al volver del checkout, garantizando consistencia aunque el webhook falle, se atrase o sea rechazado por firma inválida
 - **Transferencia bancaria** con upload de comprobante (imagen o PDF) a Cloudinary
 - Flujo de aprobación/rechazo por admin con notas
 
@@ -276,6 +277,7 @@ Tablas principales en **PostgreSQL**:
 |--------|----------|-------------|
 | POST | `/mercadopago/create` | Crear preferencia de pago |
 | POST | `/mercadopago/webhook` | Webhook IPN (validado con HMAC) |
+| POST | `/mercadopago/sync/{paymentId}` | Reconciliación manual del estado del pago (fallback) |
 
 ### 🏠 Direcciones (`/api/shippingaddress`)
 | Método | Endpoint | Descripción |

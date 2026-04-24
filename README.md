@@ -1,6 +1,6 @@
 # 🖥️ NovaTech Store — Backend API
 
-API REST para el e-commerce **NovaTech Store**, construida con **ASP.NET Core 9**, **Entity Framework Core** y **PostgreSQL**, aplicando **Clean Architecture**.
+API REST para e-commerce construida con **ASP.NET Core 9**, **Entity Framework Core** y **PostgreSQL**, aplicando **Clean Architecture**.
 
 ![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)
 ![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-9.0-512BD4?logo=dotnet&logoColor=white)
@@ -10,7 +10,7 @@ API REST para el e-commerce **NovaTech Store**, construida con **ASP.NET Core 9*
 ![JWT](https://img.shields.io/badge/JWT-Auth-000000?logo=jsonwebtokens&logoColor=white)
 
 🔗 **Frontend:** [Repositorio del Frontend](https://github.com/AngelSpinazzola/hardware-store-frontend)
-🔗 **Demo en vivo:** disponible bajo solicitud
+🔗 **Demo en vivo:** (https://novatech-store.vercel.app/)
 
 ---
 
@@ -45,8 +45,8 @@ API REST para el e-commerce **NovaTech Store**, construida con **ASP.NET Core 9*
 - **CRUD completo de productos** con filtros avanzados (categoría, marca, plataforma, precio, stock)
 - **Gestión de imágenes múltiples** con Cloudinary (principal, orden, thumbnails WebP)
 - **Sistema de carrito** con validación de stock
-- **Gestión de órdenes** con máquina de estados (`pending_payment → payment_submitted → payment_approved → shipped → delivered`)
-- **Direcciones de envío** con las 24 provincias argentinas y receptor autorizado
+- **Gestión de órdenes** (`pending_payment → payment_submitted → payment_approved → shipped → delivered`)
+- **Direcciones de envío** podes tener varias direcciones y asi elegir donde recibir el envio.
 - **Snapshot histórico** — la orden almacena una copia inmutable de dirección y datos del receptor
 
 ### 💳 Pagos
@@ -101,7 +101,7 @@ API REST para el e-commerce **NovaTech Store**, construida con **ASP.NET Core 9*
 
 ### DevOps
 - **Docker** — containerización
-- **Swagger / OpenAPI** — documentación interactiva (desarrollo)
+- **Swagger / OpenAPI** — documentación
 - **Railway** — hosting de producción
 
 ---

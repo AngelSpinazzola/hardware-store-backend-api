@@ -131,5 +131,25 @@ namespace HardwareStore.API.Controllers
                 return StatusCode(500, new { message = "Error al obtener información del pago" });
             }
         }
+
+        /// Sincroniza el estado de un pago con MercadoPago.
+        /// Fallback para cuando el webhook falla o se atrasa: el frontend puede
+        /// disparar manualmente la reconciliación del estado de la orden.
+        [HttpPost("mercadopago/sync/{paymentId}")]
+        [Authorize]
+        [EnableRateLimiting("general")]
+        public async Task<IActionResult> SyncMercadoPagoPayment(string paymentId)
+        {
+            try
+            {
+                await _mercadoPagoService.ProcessWebhookNotificationAsync(paymentId);
+                return Ok(new { message = "Pago sincronizado correctamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al sincronizar pago {PaymentId}", paymentId);
+                return StatusCode(500, new { message = "Error al sincronizar el pago" });
+            }
+        }
     }
 }

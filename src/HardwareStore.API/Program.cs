@@ -163,7 +163,7 @@ builder.Services.AddCors(options =>
         }
         else
         {
-            policy.WithOrigins("https://novatech-store.vercel.app")
+            policy.WithOrigins("https://novatech.flowbyte.ar/")
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
